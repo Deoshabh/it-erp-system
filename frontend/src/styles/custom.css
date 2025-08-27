@@ -1,0 +1,499 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9fafb;
+}
+
+/* ERP specific styles */
+.erp-container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.erp-header {
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.erp-nav {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.erp-nav-tab {
+  padding: 1rem 0.25rem;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.erp-nav-tab:hover {
+  color: #374151;
+  border-bottom-color: #d1d5db;
+}
+
+.erp-nav-tab.active {
+  border-bottom-color: #3b82f6;
+  color: #2563eb;
+}
+
+.erp-card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.erp-button {
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.erp-button:hover {
+  background-color: #2563eb;
+}
+
+.erp-button-green {
+  background-color: #10b981;
+}
+
+.erp-button-green:hover {
+  background-color: #059669;
+}
+
+.erp-button-red {
+  background-color: #ef4444;
+}
+
+.erp-button-red:hover {
+  background-color: #dc2626;
+}
+
+.erp-input {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.erp-input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-color: #3b82f6;
+}
+
+.erp-table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.erp-table th {
+  background-color: #f9fafb;
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.erp-table td {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.erp-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+}
+
+.erp-badge-green {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.erp-badge-blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.erp-badge-yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.erp-badge-red {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.erp-stat-card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+}
+
+.erp-stat-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.erp-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.erp-grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.erp-grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.erp-grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.erp-grid-cols-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+@media (max-width: 768px) {
+  .erp-grid-cols-2,
+  .erp-grid-cols-3,
+  .erp-grid-cols-4,
+  .erp-grid-cols-6 {
+    grid-template-columns: 1fr;
+  }
+  
+  .erp-nav {
+    overflow-x: auto;
+  }
+  
+  .erp-nav-tab {
+    white-space: nowrap;
+  }
+}
+
+/* Login form styles */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9fafb;
+  padding: 3rem 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  padding: 2rem;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+  color: #6b7280;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.login-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.login-select {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+  background-color: white;
+}
+
+.login-select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-color: #3b82f6;
+}
+
+.login-button {
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.875rem;
+}
+
+.login-button:hover {
+  background-color: #2563eb;
+}
+
+.login-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.logout-button {
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #dc2626;
+}
+
+/* Search and Filter Components */
+.erp-search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.erp-search-bar {
+  display: flex;
+  flex: 1;
+}
+
+.erp-filter-section {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .erp-search-section {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .erp-filter-section {
+    flex-shrink: 0;
+  }
+}
+
+/* Status Components */
+.erp-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.erp-status-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.erp-status-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.erp-status-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.erp-status-info {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Action Button Groups */
+.erp-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Form Enhancements */
+.erp-form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Module Headers */
+.erp-module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.erp-module-title {
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Reports Module Specific */
+.erp-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.erp-report-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.erp-report-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.erp-report-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.erp-report-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.erp-report-change {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.erp-report-increase {
+  color: #10b981;
+}
+
+.erp-report-decrease {
+  color: #ef4444;
+}
+
+/* Chart Container */
+.erp-chart-container {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.erp-chart-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Export Controls */
+.erp-export-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}

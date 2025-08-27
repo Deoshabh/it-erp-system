@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Monthly Report - {{month}} {{year}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #6f42c1; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .metrics { display: flex; justify-content: space-around; margin: 20px 0; }
+        .metric { background: white; padding: 15px; text-align: center; border-radius: 5px; flex: 1; margin: 0 5px; }
+        .metric h3 { margin: 0; color: #6f42c1; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Monthly Report</h1>
+            <h2>{{month}} {{year}}</h2>
+        </div>
+        <div class="content">
+            <h2>Hello {{recipientName}},</h2>
+            <p>Here's your monthly business summary for {{month}} {{year}}:</p>
+            
+            <div class="metrics">
+                <div class="metric">
+                    <h3>${{totalRevenue}}</h3>
+                    <p>Total Revenue</p>
+                </div>
+                <div class="metric">
+                    <h3>${{totalExpenses}}</h3>
+                    <p>Total Expenses</p>
+                </div>
+                <div class="metric">
+                    <h3>${{profit}}</h3>
+                    <p>Net Profit</p>
+                </div>
+                <div class="metric">
+                    <h3>{{employeeCount}}</h3>
+                    <p>Employees</p>
+                </div>
+            </div>
+            
+            <p>For detailed analytics and charts, please visit your dashboard.</p>
+            <p>If you need any clarification on these numbers, please contact the finance team.</p>
+            
+            <p>Best regards,<br>{{companyName}} Finance Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{companyName}}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,515 @@
+import React, { useState, useEffect } from 'react';
+import Layout from '../components/layout/Layout';
+import { formatCurrency } from '../utils/currency';
+import {
+  DocumentIcon,
+  TrashIcon,
+  ArrowDownTrayIcon,
+  EyeIcon,
+  FolderIcon,
+  DocumentTextIcon,
+  PhotoIcon,
+  VideoCameraIcon,
+  MusicalNoteIcon,
+  ArchiveBoxIcon,
+  CloudArrowUpIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon
+} from '@heroicons/react/24/outline';
+
+interface FileRecord {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimetype: string;
+  size: number;
+  uploadedAt: string;
+  category?: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  path?: string;
+}
+
+const FilesPage: React.FC = () => {
+  const [files, setFiles] = useState<FileRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('general');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filterType, setFilterType] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<string>('');
+
+  useEffect(() => {
+    fetchFiles();
+  }, []);
+
+  const fetchFiles = async () => {
+    try {
+      setLoading(true);
+      // Simulate API call - replace with actual backend call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockData: FileRecord[] = [
+        {
+          id: '1',
+          filename: 'employee_handbook_2025.pdf',
+          originalName: 'Employee Handbook 2025.pdf',
+          mimetype: 'application/pdf',
+          size: 2048576,
+          uploadedAt: '2025-08-27T10:30:00Z',
+          category: 'hr_documents',
+          relatedEntityType: 'employee',
+          relatedEntityId: '1',
+        },
+        {
+          id: '2',
+          filename: 'quarterly_report_q3.xlsx',
+          originalName: 'Quarterly Report Q3.xlsx',
+          mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          size: 1024000,
+          uploadedAt: '2025-08-26T15:45:00Z',
+          category: 'finance_reports',
+          relatedEntityType: 'finance',
+          relatedEntityId: '1',
+        },
+        {
+          id: '3',
+          filename: 'company_logo.png',
+          originalName: 'Company Logo.png',
+          mimetype: 'image/png',
+          size: 512000,
+          uploadedAt: '2025-08-25T09:20:00Z',
+          category: 'marketing',
+        },
+        {
+          id: '4',
+          filename: 'training_video.mp4',
+          originalName: 'New Employee Training.mp4',
+          mimetype: 'video/mp4',
+          size: 15728640,
+          uploadedAt: '2025-08-24T14:15:00Z',
+          category: 'training',
+        },
+        {
+          id: '5',
+          filename: 'invoice_template.docx',
+          originalName: 'Invoice Template.docx',
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 256000,
+          uploadedAt: '2025-08-23T11:00:00Z',
+          category: 'templates',
+        }
+      ];
+      
+      setFiles(mockData);
+    } catch (err) {
+      setError('Failed to fetch files');
+      console.error('Error fetching files:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleFileUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      setError('Please select a file to upload');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError(null);
+      
+      // Simulate file upload to backend with database persistence
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('category', selectedCategory);
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const newFile: FileRecord = {
+        id: Date.now().toString(),
+        filename: `${Date.now()}_${selectedFile.name}`,
+        originalName: selectedFile.name,
+        mimetype: selectedFile.type,
+        size: selectedFile.size,
+        uploadedAt: new Date().toISOString(),
+        category: selectedCategory,
+      };
+
+      // Add to state (simulating database persistence)
+      setFiles(prev => [newFile, ...prev]);
+      setSelectedFile(null);
+      setSelectedCategory('general');
+      
+      // Reset the file input
+      const fileInput = document.getElementById('file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      
+    } catch (err) {
+      setError('Failed to upload file');
+      console.error('Error uploading file:', err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteFile = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this file?')) return;
+
+    try {
+      // Simulate API call to delete from database
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setFiles(prev => prev.filter(file => file.id !== id));
+    } catch (err) {
+      setError('Failed to delete file');
+      console.error('Error deleting file:', err);
+    }
+  };
+
+  const handleDownloadFile = (file: FileRecord) => {
+    // Simulate file download
+    const blob = new Blob(['File content placeholder'], { type: file.mimetype });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.originalName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const getFileIcon = (mimetype: string) => {
+    if (mimetype.startsWith('image/')) {
+      return <PhotoIcon className="h-8 w-8 text-green-500" />;
+    } else if (mimetype.startsWith('video/')) {
+      return <VideoCameraIcon className="h-8 w-8 text-red-500" />;
+    } else if (mimetype.startsWith('audio/')) {
+      return <MusicalNoteIcon className="h-8 w-8 text-purple-500" />;
+    } else if (mimetype.includes('pdf')) {
+      return <DocumentIcon className="h-8 w-8 text-red-500" />;
+    } else if (mimetype.includes('word') || mimetype.includes('document')) {
+      return <DocumentTextIcon className="h-8 w-8 text-blue-500" />;
+    } else if (mimetype.includes('zip') || mimetype.includes('rar')) {
+      return <ArchiveBoxIcon className="h-8 w-8 text-orange-500" />;
+    } else {
+      return <DocumentIcon className="h-8 w-8 text-gray-500" />;
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getCategoryBadgeColor = (category: string) => {
+    switch (category) {
+      case 'hr_documents': return 'bg-blue-100 text-blue-800';
+      case 'finance_reports': return 'bg-green-100 text-green-800';
+      case 'marketing': return 'bg-pink-100 text-pink-800';
+      case 'training': return 'bg-purple-100 text-purple-800';
+      case 'templates': return 'bg-indigo-100 text-indigo-800';
+      case 'contracts': return 'bg-orange-100 text-orange-800';
+      case 'presentations': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const filteredFiles = files.filter(file => {
+    const matchesSearch = file.originalName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         file.category?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === '' || file.mimetype.startsWith(filterType);
+    const matchesCategory = filterCategory === '' || file.category === filterCategory;
+    
+    return matchesSearch && matchesType && matchesCategory;
+  });
+
+  const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+
+  if (loading && files.length === 0) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">File Management</h1>
+              <p className="text-gray-600 mt-2">Upload, organize, and manage your company files with database persistence</p>
+            </div>
+          </div>
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-600">Total Files</p>
+                  <p className="text-2xl font-bold text-blue-900">{files.length}</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <DocumentIcon className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-600">Total Storage</p>
+                  <p className="text-2xl font-bold text-green-900">{formatFileSize(totalSize)}</p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <FolderIcon className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-purple-600">Categories</p>
+                  <p className="text-2xl font-bold text-purple-900">{new Set(files.map(f => f.category).filter(Boolean)).size}</p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <ArchiveBoxIcon className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-orange-600">Recent Uploads</p>
+                  <p className="text-2xl font-bold text-orange-900">{files.filter(f => new Date(f.uploadedAt) > new Date(Date.now() - 7*24*60*60*1000)).length}</p>
+                </div>
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <CloudArrowUpIcon className="h-6 w-6 text-orange-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Upload Section */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload New File</h2>
+          <form onSubmit={handleFileUpload} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select File
+                </label>
+                <input
+                  id="file-input"
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="general">General</option>
+                  <option value="hr_documents">HR Documents</option>
+                  <option value="finance_reports">Finance Reports</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="training">Training</option>
+                  <option value="templates">Templates</option>
+                  <option value="contracts">Contracts</option>
+                  <option value="presentations">Presentations</option>
+                </select>
+              </div>
+            </div>
+            
+            {selectedFile && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
+                    <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                  >
+                    {uploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <CloudArrowUpIcon className="h-4 w-4" />
+                        Upload File
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search files by name or category..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Types</option>
+              <option value="image/">Images</option>
+              <option value="video/">Videos</option>
+              <option value="audio/">Audio</option>
+              <option value="application/pdf">PDF</option>
+              <option value="application/vnd.openxmlformats-officedocument">Office Documents</option>
+            </select>
+            
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Categories</option>
+              <option value="hr_documents">HR Documents</option>
+              <option value="finance_reports">Finance Reports</option>
+              <option value="marketing">Marketing</option>
+              <option value="training">Training</option>
+              <option value="templates">Templates</option>
+              <option value="contracts">Contracts</option>
+              <option value="presentations">Presentations</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Files Grid */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Files ({filteredFiles.length})
+          </h2>
+          
+          {filteredFiles.length === 0 ? (
+            <div className="text-center py-12">
+              <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No files found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchQuery || filterType || filterCategory 
+                  ? 'Try adjusting your search or filters'
+                  : 'Upload your first file to get started'
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredFiles.map((file) => (
+                <div key={file.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3 flex-1">
+                      <div className="flex-shrink-0">
+                        {getFileIcon(file.mimetype)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {file.originalName}
+                        </p>
+                        <div className="mt-1 flex items-center space-x-2">
+                          {file.category && (
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryBadgeColor(file.category)}`}>
+                              {file.category.replace('_', ' ')}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatFileSize(file.size)} • {new Date(file.uploadedAt).toLocaleDateString('en-IN')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex justify-end space-x-2">
+                    <button
+                      onClick={() => handleDownloadFile(file)}
+                      className="text-blue-600 hover:text-blue-900"
+                      title="Download"
+                    >
+                      <ArrowDownTrayIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="text-green-600 hover:text-green-900"
+                      title="Preview"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFile(file.id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default FilesPage;
