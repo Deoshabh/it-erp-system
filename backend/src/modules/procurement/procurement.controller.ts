@@ -8,7 +8,8 @@ import {
   Delete, 
   Query, 
   UseGuards, 
-  Request 
+  Request,
+  BadRequestException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ProcurementService } from './procurement.service';
@@ -21,7 +22,7 @@ import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('procurement')
 @ApiBearerAuth()
-@Controller('api/v1/procurement')
+@Controller('procurement')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProcurementController {
   constructor(private readonly procurementService: ProcurementService) {}
@@ -34,7 +35,11 @@ export class ProcurementController {
     @Body() createDto: CreateProcurementRequestDto,
     @Request() req: any,
   ) {
-    return await this.procurementService.createRequest(createDto, req.user?.id || req.user?.sub);
+    const userId = req.user?.sub || req.user?.id;
+    if (!userId) {
+      throw new BadRequestException('User not authenticated');
+    }
+    return await this.procurementService.createRequest(createDto, userId);
   }
 
   @Get()

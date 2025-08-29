@@ -8,6 +8,11 @@ import { FinanceModule } from './modules/finance/finance.module';
 import { ProcurementModule } from './modules/procurement/procurement.module';
 import { FilesModule } from './modules/files/files.module';
 import { EmailModule } from './modules/email/email.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { SalesModule } from './modules/sales/sales.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ProjectsModule } from './modules/projects/projects.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AppController } from './app.controller';
 import { databaseConfig } from './database/database.config';
 
@@ -35,6 +40,11 @@ import { databaseConfig } from './database/database.config';
     ProcurementModule,
     FilesModule,
     EmailModule,
+    InventoryModule,
+    SalesModule,
+    NotificationsModule,
+    ProjectsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [],

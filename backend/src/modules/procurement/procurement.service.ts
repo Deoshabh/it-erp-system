@@ -1,27 +1,31 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
-import { ProcurementRequest, ProcurementStatus } from './entities/procurement-request.entity';
+import { Repository, Like, FindManyOptions, Between } from 'typeorm';
+import { ProcurementRequest, ProcurementStatus, ProcurementCategory, ProcurementPriority } from './entities/procurement-request.entity';
 import { CreateProcurementRequestDto, UpdateProcurementRequestDto } from './dto/procurement-request.dto';
+import { UserRole } from '../users/entities/user.entity';
 
 @Injectable()
 export class ProcurementService {
   constructor(
     @InjectRepository(ProcurementRequest)
-    private readonly procurementRepository: Repository<ProcurementRequest>,
+    private procurementRepository: Repository<ProcurementRequest>,
   ) {}
 
-  async createRequest(createDto: CreateProcurementRequestDto, requesterId: string): Promise<ProcurementRequest> {
-    const requestId = `PR-${Date.now()}`;
-    
-    const procurement = this.procurementRepository.create({
+  async createRequest(createDto: CreateProcurementRequestDto, userId: string): Promise<ProcurementRequest> {
+    // Generate unique request ID
+    const requestId = await this.generateRequestId();
+
+    const request = this.procurementRepository.create({
       ...createDto,
       requestId,
-      requesterId,
+      requesterId: userId,
       status: ProcurementStatus.DRAFT,
+      priority: createDto.priority || ProcurementPriority.MEDIUM,
+      requiredBy: createDto.requiredBy ? new Date(createDto.requiredBy) : null,
     });
 
-    return await this.procurementRepository.save(procurement);
+    return await this.procurementRepository.save(request);
   }
 
   async findAll(
@@ -35,64 +39,60 @@ export class ProcurementService {
     sortBy: string = 'createdAt',
     sortOrder: 'ASC' | 'DESC' = 'DESC',
   ) {
-    const query = this.procurementRepository.createQueryBuilder('procurement')
-      .leftJoinAndSelect('procurement.requester', 'requester')
-      .leftJoinAndSelect('procurement.approver', 'approver');
-
+    const skip = (page - 1) * limit;
+    
+    const where: any = {};
+    
     if (search) {
-      query.andWhere(
-        '(procurement.title ILIKE :search OR procurement.description ILIKE :search OR procurement.vendor ILIKE :search OR procurement.requestId ILIKE :search)',
-        { search: `%${search}%` }
-      );
+      where.title = Like(`%${search}%`);
     }
-
+    
     if (status) {
-      query.andWhere('procurement.status = :status', { status });
+      where.status = status;
     }
-
+    
     if (category) {
-      query.andWhere('procurement.category = :category', { category });
+      where.category = category;
     }
-
+    
     if (department) {
-      query.andWhere('procurement.department = :department', { department });
+      where.department = department;
     }
-
+    
     if (priority) {
-      query.andWhere('procurement.priority = :priority', { priority });
+      where.priority = priority;
     }
 
-    const total = await query.getCount();
+    const options: FindManyOptions<ProcurementRequest> = {
+      where,
+      skip,
+      take: limit,
+      order: { [sortBy]: sortOrder },
+      relations: ['requester', 'approver'],
+    };
 
-    query
-      .orderBy(`procurement.${sortBy}`, sortOrder)
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    const requests = await query.getMany();
+    const [requests, total] = await this.procurementRepository.findAndCount(options);
 
     return {
       data: requests,
-      pagination: {
-        total,
-        totalPages: Math.ceil(total / limit),
-        currentPage: page,
-        limit,
-      },
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
   async findOne(id: string): Promise<ProcurementRequest> {
-    const procurement = await this.procurementRepository.findOne({
+    const request = await this.procurementRepository.findOne({
       where: { id },
       relations: ['requester', 'approver'],
     });
 
-    if (!procurement) {
-      throw new NotFoundException('Procurement request not found');
+    if (!request) {
+      throw new NotFoundException(`Procurement request with ID ${id} not found`);
     }
 
-    return procurement;
+    return request;
   }
 
   async updateRequest(
@@ -101,120 +101,177 @@ export class ProcurementService {
     userId: string,
     userRole: string,
   ): Promise<ProcurementRequest> {
-    const procurement = await this.findOne(id);
+    const request = await this.findOne(id);
 
     // Check permissions
-    if (procurement.requesterId !== userId && !['admin', 'manager'].includes(userRole)) {
-      throw new ForbiddenException('You can only update your own requests');
+    const canEdit = this.canEditRequest(request, userId, userRole);
+    if (!canEdit) {
+      throw new ForbiddenException('You do not have permission to edit this request');
     }
 
-    // Special handling for status changes
+    // Update fields
+    Object.assign(request, updateDto);
+
+    if (updateDto.requiredBy) {
+      request.requiredBy = new Date(updateDto.requiredBy);
+    }
+
+    // Handle status changes
     if (updateDto.status) {
-      switch (updateDto.status) {
-        case ProcurementStatus.APPROVED:
-          if (!['admin', 'manager'].includes(userRole)) {
-            throw new ForbiddenException('Only managers can approve requests');
-          }
-          updateDto.approvalNotes = updateDto.approvalNotes || 'Approved';
-          procurement.approverId = userId;
-          procurement.approvedAt = new Date();
-          break;
-
-        case ProcurementStatus.REJECTED:
-          if (!['admin', 'manager'].includes(userRole)) {
-            throw new ForbiddenException('Only managers can reject requests');
-          }
-          if (!updateDto.rejectionReason) {
-            throw new ForbiddenException('Rejection reason is required');
-          }
-          procurement.approverId = userId;
-          break;
-
-        case ProcurementStatus.ORDERED:
-          if (procurement.status !== ProcurementStatus.APPROVED) {
-            throw new ForbiddenException('Can only order approved requests');
-          }
-          procurement.orderedAt = new Date();
-          break;
-
-        case ProcurementStatus.RECEIVED:
-          if (procurement.status !== ProcurementStatus.ORDERED) {
-            throw new ForbiddenException('Can only mark ordered requests as received');
-          }
-          procurement.receivedAt = new Date();
-          break;
+      request.status = updateDto.status;
+      
+      if (updateDto.status === ProcurementStatus.APPROVED) {
+        request.approvedAt = new Date();
+        request.approverId = userId;
+      } else if (updateDto.status === ProcurementStatus.ORDERED) {
+        request.orderedAt = new Date();
+      } else if (updateDto.status === ProcurementStatus.RECEIVED) {
+        request.receivedAt = new Date();
       }
     }
 
-    Object.assign(procurement, updateDto);
-    return await this.procurementRepository.save(procurement);
-  }
-
-  async deleteRequest(id: string, userId: string, userRole: string): Promise<void> {
-    const procurement = await this.findOne(id);
-
-    if (procurement.requesterId !== userId && !['admin'].includes(userRole)) {
-      throw new ForbiddenException('You can only delete your own requests');
-    }
-
-    if (procurement.status === ProcurementStatus.APPROVED || procurement.status === ProcurementStatus.ORDERED) {
-      throw new ForbiddenException('Cannot delete approved or ordered requests');
-    }
-
-    await this.procurementRepository.remove(procurement);
-  }
-
-  async getStatistics(department?: string) {
-    const query = this.procurementRepository.createQueryBuilder('procurement');
-
-    if (department) {
-      query.where('procurement.department = :department', { department });
-    }
-
-    const totalRequests = await query.getCount();
-
-    const statusStats = await query
-      .select('procurement.status', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .groupBy('procurement.status')
-      .getRawMany();
-
-    const categoryStats = await query
-      .select('procurement.category', 'category')
-      .addSelect('COUNT(*)', 'count')
-      .addSelect('SUM(procurement.estimatedAmount)', 'totalAmount')
-      .groupBy('procurement.category')
-      .getRawMany();
-
-    const monthlySpend = await query
-      .select("DATE_TRUNC('month', procurement.createdAt)", 'month')
-      .addSelect('SUM(procurement.actualAmount)', 'totalSpend')
-      .where('procurement.status = :status', { status: ProcurementStatus.RECEIVED })
-      .groupBy("DATE_TRUNC('month', procurement.createdAt)")
-      .orderBy('month', 'DESC')
-      .limit(12)
-      .getRawMany();
-
-    return {
-      totalRequests,
-      statusStats,
-      categoryStats,
-      monthlySpend,
-    };
+    return await this.procurementRepository.save(request);
   }
 
   async submitForApproval(id: string, userId: string): Promise<ProcurementRequest> {
-    const procurement = await this.findOne(id);
+    const request = await this.findOne(id);
 
-    if (procurement.requesterId !== userId) {
+    if (request.requesterId !== userId) {
       throw new ForbiddenException('You can only submit your own requests');
     }
 
-    if (procurement.status !== ProcurementStatus.DRAFT) {
-      throw new ForbiddenException('Only draft requests can be submitted for approval');
+    if (request.status !== ProcurementStatus.DRAFT) {
+      throw new BadRequestException('Only draft requests can be submitted for approval');
     }
 
-    procurement.status = ProcurementStatus.PENDING_APPROVAL;
-    return await this.procurementRepository.save(procurement);
+    request.status = ProcurementStatus.PENDING_APPROVAL;
+    return await this.procurementRepository.save(request);
+  }
+
+  async deleteRequest(id: string, userId: string, userRole: string): Promise<void> {
+    const request = await this.findOne(id);
+
+    // Only allow deletion of draft requests by owner or admin
+    if (request.status !== ProcurementStatus.DRAFT) {
+      throw new BadRequestException('Only draft requests can be deleted');
+    }
+
+    const canDelete = request.requesterId === userId || userRole === UserRole.ADMIN;
+    if (!canDelete) {
+      throw new ForbiddenException('You do not have permission to delete this request');
+    }
+
+    await this.procurementRepository.remove(request);
+  }
+
+  async getStatistics(department?: string) {
+    const where: any = {};
+    if (department) {
+      where.department = department;
+    }
+
+    const [
+      total,
+      pending,
+      approved,
+      rejected,
+      totalValueResult,
+    ] = await Promise.all([
+      this.procurementRepository.count({ where }),
+      this.procurementRepository.count({ where: { ...where, status: ProcurementStatus.PENDING_APPROVAL } }),
+      this.procurementRepository.count({ where: { ...where, status: ProcurementStatus.APPROVED } }),
+      this.procurementRepository.count({ where: { ...where, status: ProcurementStatus.REJECTED } }),
+      this.procurementRepository
+        .createQueryBuilder('request')
+        .select('SUM(request.estimatedAmount)', 'total')
+        .where(department ? 'request.department = :department' : '1=1', { department })
+        .getRawOne(),
+    ]);
+
+    const totalValue = parseFloat(totalValueResult?.total || '0');
+
+    // Get category distribution
+    const categoryStats = await this.procurementRepository
+      .createQueryBuilder('request')
+      .select('request.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect('SUM(request.estimatedAmount)', 'value')
+      .where(department ? 'request.department = :department' : '1=1', { department })
+      .groupBy('request.category')
+      .getRawMany();
+
+    // Get monthly trends (last 6 months)
+    const monthlyTrends = await this.procurementRepository
+      .createQueryBuilder('request')
+      .select("DATE_FORMAT(request.createdAt, '%Y-%m')", 'month')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect('SUM(request.estimatedAmount)', 'value')
+      .where('request.createdAt >= DATE_SUB(NOW(), INTERVAL 6 MONTH)')
+      .andWhere(department ? 'request.department = :department' : '1=1', { department })
+      .groupBy('month')
+      .orderBy('month', 'ASC')
+      .getRawMany();
+
+    return {
+      summary: {
+        total,
+        pending,
+        approved,
+        rejected,
+        totalValue,
+        averageValue: total > 0 ? totalValue / total : 0,
+      },
+      categoryDistribution: categoryStats.map(stat => ({
+        category: stat.category,
+        count: parseInt(stat.count),
+        value: parseFloat(stat.value || '0'),
+      })),
+      monthlyTrends: monthlyTrends.map(trend => ({
+        month: trend.month,
+        count: parseInt(trend.count),
+        value: parseFloat(trend.value || '0'),
+      })),
+    };
+  }
+
+  private async generateRequestId(): Promise<string> {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    
+    // Get count of requests this month
+    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    const count = await this.procurementRepository.count({
+      where: {
+        createdAt: Between(startOfMonth, endOfMonth),
+      },
+    });
+
+    const sequence = (count + 1).toString().padStart(4, '0');
+    return `PR${year}${month}${sequence}`;
+  }
+
+  private canEditRequest(request: ProcurementRequest, userId: string, userRole: string): boolean {
+    // Admin can edit any request
+    if (userRole === UserRole.ADMIN) {
+      return true;
+    }
+
+    // Requester can edit their own draft requests
+    if (request.requesterId === userId && request.status === ProcurementStatus.DRAFT) {
+      return true;
+    }
+
+    // Managers/HR can edit pending requests for approval decisions
+    if (
+      (userRole === UserRole.MANAGER || userRole === UserRole.HR || userRole === UserRole.FINANCE) &&
+      request.status === ProcurementStatus.PENDING_APPROVAL
+    ) {
+      return true;
+    }
+
+    return false;
   }
 }

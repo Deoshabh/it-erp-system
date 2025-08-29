@@ -4,6 +4,7 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 import RoleBasedComponent from '../components/auth/RoleBasedComponent';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency } from '../utils/currency';
+import { procurementService, ProcurementRequest, ProcurementStats } from '../services/procurementService';
 import { 
   MagnifyingGlassIcon, 
   PlusIcon, 
@@ -16,33 +17,6 @@ import {
   PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 import { ShoppingCartIcon } from '@heroicons/react/24/outline';
-
-interface ProcurementRequest {
-  id: string;
-  requestId: string;
-  title: string;
-  description: string;
-  category: 'office_supplies' | 'it_equipment' | 'software_licenses' | 'furniture' | 'marketing' | 'travel' | 'training' | 'services' | 'maintenance' | 'other';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'ordered' | 'received' | 'cancelled';
-  estimatedAmount: number;
-  actualAmount?: number;
-  vendor?: string;
-  vendorContact?: string;
-  requiredBy?: string;
-  department: string;
-  requester: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  approver?: {
-    firstName: string;
-    lastName: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface SearchFilters {
   search: string;
@@ -69,6 +43,7 @@ const ProcurementPage: React.FC = () => {
 const ProcurementContent: React.FC = () => {
   const { user } = useAuth();
   const [requests, setRequests] = useState<ProcurementRequest[]>([]);
+  const [stats, setStats] = useState<ProcurementStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -119,103 +94,29 @@ const ProcurementContent: React.FC = () => {
     department: '',
   });
 
-  // Mock API Functions (replace with actual API calls)
+  // API Functions using real backend service
+  const fetchStats = useCallback(async () => {
+    try {
+      const statsData = await procurementService.getStats();
+      setStats(statsData);
+    } catch (err) {
+      console.error('Error fetching procurement stats:', err);
+      setStats(null);
+    }
+  }, []);
+
   const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock data with INR amounts
-      let mockData: ProcurementRequest[] = [
-        {
-          id: '1',
-          requestId: 'PR-001',
-          title: 'New Laptops for Development Team',
-          description: 'MacBook Pro M3 laptops for 5 developers',
-          category: 'it_equipment',
-          priority: 'high',
-          status: 'pending_approval',
-          estimatedAmount: 1200000,
-          department: 'Engineering',
-          vendor: 'Apple Store',
-          vendorContact: 'sales@apple.com',
-          requiredBy: '2025-09-15',
-          requester: {
-            firstName: 'Rajesh',
-            lastName: 'Kumar',
-            email: 'rajesh.kumar@company.com',
-          },
-          createdAt: '2025-08-25T00:00:00Z',
-          updatedAt: '2025-08-25T00:00:00Z',
-        },
-        {
-          id: '2',
-          requestId: 'PR-002',
-          title: 'Office Furniture',
-          description: 'Ergonomic chairs and standing desks',
-          category: 'furniture',
-          priority: 'medium',
-          status: 'approved',
-          estimatedAmount: 300000,
-          actualAmount: 285000,
-          department: 'HR',
-          vendor: 'Godrej Interio',
-          approver: {
-            firstName: 'Priya',
-            lastName: 'Sharma',
-          },
-          requester: {
-            firstName: 'Amit',
-            lastName: 'Patel',
-            email: 'amit.patel@company.com',
-          },
-          createdAt: '2025-08-20T00:00:00Z',
-          updatedAt: '2025-08-26T00:00:00Z',
-        },
-        {
-          id: '3',
-          requestId: 'PR-003',
-          title: 'Software Licenses',
-          description: 'Adobe Creative Suite licenses for design team',
-          category: 'software_licenses',
-          priority: 'urgent',
-          status: 'draft',
-          estimatedAmount: 450000,
-          department: 'Marketing',
-          vendor: 'Adobe India',
-          requester: {
-            firstName: 'Sunita',
-            lastName: 'Singh',
-            email: 'sunita.singh@company.com',
-          },
-          createdAt: '2025-08-27T00:00:00Z',
-          updatedAt: '2025-08-27T00:00:00Z',
-        },
-        {
-          id: '4',
-          requestId: 'PR-004',
-          title: 'Training Program',
-          description: 'AWS certification training for cloud team',
-          category: 'training',
-          priority: 'low',
-          status: 'rejected',
-          estimatedAmount: 180000,
-          department: 'Engineering',
-          requester: {
-            firstName: 'Vikash',
-            lastName: 'Gupta',
-            email: 'vikash.gupta@company.com',
-          },
-          createdAt: '2025-08-22T00:00:00Z',
-          updatedAt: '2025-08-24T00:00:00Z',
-        }
-      ];
+      // Get all requests from backend
+      const allRequests = await procurementService.getAllRequests();
+      let filteredData = [...allRequests];
 
       // Apply filters
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
-        mockData = mockData.filter(request => 
+        filteredData = filteredData.filter(request => 
           request.title.toLowerCase().includes(searchTerm) ||
           request.description.toLowerCase().includes(searchTerm) ||
           request.requestId.toLowerCase().includes(searchTerm) ||
@@ -227,37 +128,37 @@ const ProcurementContent: React.FC = () => {
       }
 
       if (filters.status) {
-        mockData = mockData.filter(request => request.status === filters.status);
+        filteredData = filteredData.filter(request => request.status === filters.status);
       }
 
       if (filters.category) {
-        mockData = mockData.filter(request => request.category === filters.category);
+        filteredData = filteredData.filter(request => request.category === filters.category);
       }
 
       if (filters.priority) {
-        mockData = mockData.filter(request => request.priority === filters.priority);
+        filteredData = filteredData.filter(request => request.priority === filters.priority);
       }
 
       if (filters.department) {
-        mockData = mockData.filter(request => request.department === filters.department);
+        filteredData = filteredData.filter(request => request.department === filters.department);
       }
 
       // Apply role-based filtering
       if (user?.role === 'employee') {
         // Employees can only see their own requests
-        mockData = mockData.filter(request => 
+        filteredData = filteredData.filter(request => 
           request.requester.email === user.email
         );
       } else if (user?.role === 'manager') {
         // Managers can see requests from their department
-        mockData = mockData.filter(request => 
+        filteredData = filteredData.filter(request => 
           request.department === user.department || request.requester.email === user.email
         );
       }
       // Admin, HR, and Finance roles can see all requests (no additional filtering)
 
       // Apply sorting
-      mockData.sort((a, b) => {
+      filteredData.sort((a, b) => {
         const aValue = a[filters.sortBy as keyof ProcurementRequest];
         const bValue = b[filters.sortBy as keyof ProcurementRequest];
         
@@ -274,19 +175,29 @@ const ProcurementContent: React.FC = () => {
         return 0;
       });
 
-      setRequests(mockData);
+      setRequests(filteredData);
       setPagination({
-        total: mockData.length,
-        totalPages: Math.ceil(mockData.length / filters.limit),
+        total: filteredData.length,
+        totalPages: Math.ceil(filteredData.length / filters.limit),
         currentPage: filters.page,
       });
+
+      // Also fetch stats
+      await fetchStats();
     } catch (err) {
       setError('Failed to fetch procurement requests');
       console.error('Error fetching requests:', err);
+      // Fallback to empty state
+      setRequests([]);
+      setPagination({
+        total: 0,
+        totalPages: 0,
+        currentPage: 1,
+      });
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, user, fetchStats]);
 
   useEffect(() => {
     fetchRequests();
@@ -295,25 +206,25 @@ const ProcurementContent: React.FC = () => {
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const request: ProcurementRequest = {
-        id: Date.now().toString(),
+      const requestData: ProcurementRequest = {
         requestId: `PR-${Date.now()}`,
         ...newRequest,
         estimatedAmount: parseFloat(newRequest.estimatedAmount) || 0,
         status: 'draft',
         requester: {
-          firstName: 'Current',
-          lastName: 'User',
-          email: 'current.user@company.com',
+          firstName: user?.firstName || 'Current',
+          lastName: user?.lastName || 'User',
+          email: user?.email || 'current.user@company.com',
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
-      setRequests(prev => [request, ...prev]);
+      const createdRequest = await procurementService.createRequest(requestData);
+      
+      // Refresh the requests list
+      await fetchRequests();
+      
       setShowCreateForm(false);
       setNewRequest({
         title: '',
@@ -328,21 +239,30 @@ const ProcurementContent: React.FC = () => {
       });
     } catch (err) {
       setError('Failed to create request');
+      console.error('Error creating request:', err);
     }
   };
 
   const handleApprove = async (id: string) => {
-    setRequests(prev => prev.map(req => 
-      req.id === id ? { ...req, status: 'approved' as const } : req
-    ));
+    try {
+      await procurementService.approveRequest(id);
+      await fetchRequests(); // Refresh the list
+    } catch (err) {
+      setError('Failed to approve request');
+      console.error('Error approving request:', err);
+    }
   };
 
   const handleReject = async (id: string) => {
     const reason = prompt('Please provide a reason for rejection:');
     if (reason) {
-      setRequests(prev => prev.map(req => 
-        req.id === id ? { ...req, status: 'rejected' as const } : req
-      ));
+      try {
+        await procurementService.rejectRequest(id);
+        await fetchRequests(); // Refresh the list
+      } catch (err) {
+        setError('Failed to reject request');
+        console.error('Error rejecting request:', err);
+      }
     }
   };
 
@@ -408,12 +328,11 @@ const ProcurementContent: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this request?')) {
       try {
         setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        setRequests(prev => prev.filter(req => req.id !== id));
+        await procurementService.deleteRequest(id);
+        await fetchRequests(); // Refresh the list
       } catch (err) {
         setError('Failed to delete request');
+        console.error('Error deleting request:', err);
       } finally {
         setLoading(false);
       }
@@ -724,14 +643,14 @@ const ProcurementContent: React.FC = () => {
                           {request.status === 'pending_approval' && (
                             <>
                               <button 
-                                onClick={() => handleApprove(request.id)}
+                                onClick={() => request.id && handleApprove(request.id)}
                                 className="text-green-600 hover:text-green-900"
                                 title="Approve Request"
                               >
                                 <CheckIcon className="h-4 w-4" />
                               </button>
                               <button 
-                                onClick={() => handleReject(request.id)}
+                                onClick={() => request.id && handleReject(request.id)}
                                 className="text-red-600 hover:text-red-900"
                                 title="Reject Request"
                               >
@@ -762,7 +681,7 @@ const ProcurementContent: React.FC = () => {
                         
                         <RoleBasedComponent requiredResource="procurement" requiredAction="delete">
                           <button 
-                            onClick={() => handleDeleteRequest(request.id)}
+                            onClick={() => request.id && handleDeleteRequest(request.id)}
                             className="text-red-600 hover:text-red-900"
                             title="Delete Request"
                           >
@@ -1167,11 +1086,11 @@ const ProcurementContent: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
-                      <p className="text-sm text-gray-900">{new Date(selectedRequest.createdAt).toLocaleString()}</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleString() : 'N/A'}</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
-                      <p className="text-sm text-gray-900">{new Date(selectedRequest.updatedAt).toLocaleString()}</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.updatedAt ? new Date(selectedRequest.updatedAt).toLocaleString() : 'N/A'}</p>
                     </div>
                   </div>
                 </div>

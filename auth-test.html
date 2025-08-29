@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP System - Authentication Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>ERP System Login Test</h2>
+    
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="admin@admin.com" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="admin123" required>
+        </div>
+        
+        <button type="submit">Login</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <div style="margin-top: 30px;">
+        <h3>Test API Endpoints:</h3>
+        <button onclick="testProcurementStats()">Test Procurement Stats</button>
+        <button onclick="testEmployeeStats()">Test Employee Stats</button>
+        <button onclick="testCreateRequest()">Test Create Request</button>
+        <div id="apiResults"></div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('auth_token');
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    localStorage.setItem('auth_token', authToken);
+                    localStorage.setItem('auth_user', JSON.stringify(data.user));
+                    
+                    document.getElementById('result').innerHTML = `
+                        <div class="success">
+                            Login successful!<br>
+                            User: ${data.user.firstName} ${data.user.lastName}<br>
+                            Role: ${data.user.role}<br>
+                            Token: ${authToken.substring(0, 20)}...
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div class="error">Login failed: ${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            }
+        });
+        
+        async function testProcurementStats() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/procurement/statistics', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                document.getElementById('apiResults').innerHTML = `
+                    <h4>Procurement Stats:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = `
+                    <div class="error">Procurement Stats Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testEmployeeStats() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/employees/statistics', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                document.getElementById('apiResults').innerHTML = `
+                    <h4>Employee Stats:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = `
+                    <div class="error">Employee Stats Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testCreateRequest() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/procurement', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Request',
+                        description: 'This is a test procurement request',
+                        category: 'office_supplies',
+                        priority: 'medium',
+                        estimatedAmount: 100,
+                        department: 'IT'
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('apiResults').innerHTML = `
+                    <h4>Create Request Result:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = `
+                    <div class="error">Create Request Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        // Check if already logged in
+        if (authToken) {
+            document.getElementById('result').innerHTML = `
+                <div class="success">Already logged in with token: ${authToken.substring(0, 20)}...</div>
+            `;
+        }
+    </script>
+</body>
+</html>

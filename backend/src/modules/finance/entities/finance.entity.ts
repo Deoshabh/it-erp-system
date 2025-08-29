@@ -11,6 +11,9 @@ export class Invoice {
   @Column()
   clientName: string;
 
+  @Column({ nullable: true })
+  clientEmail?: string;
+
   @Column('decimal', { precision: 10, scale: 2 })
   amount: number;
 
@@ -18,7 +21,13 @@ export class Invoice {
   dueDate: string;
 
   @Column({ default: 'pending' })
-  status: string; // pending, paid, overdue
+  status: string; // pending, paid, overdue, draft, cancelled
+
+  @Column('json', { nullable: true })
+  items?: any[];
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -38,6 +47,9 @@ export class Expense {
   @Column()
   category: string;
 
+  @Column({ nullable: true })
+  vendor?: string;
+
   @Column('decimal', { precision: 10, scale: 2 })
   amount: number;
 
@@ -46,6 +58,12 @@ export class Expense {
 
   @Column({ default: 'pending' })
   status: string; // pending, approved, rejected
+
+  @Column({ nullable: true })
+  receiptUrl?: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
 
   @CreateDateColumn()
   createdAt: Date;

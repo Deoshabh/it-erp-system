@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import { FileEntity } from './entities/file.entity';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -69,5 +69,32 @@ export class FilesService {
 
   getFileStream(filePath: string): fs.ReadStream {
     return fs.createReadStream(filePath);
+  }
+
+  async getStatistics(): Promise<any> {
+    try {
+      console.log('Starting getStatistics');
+      
+      // Just return basic static data for now
+      return {
+        totalFiles: 0,
+        totalSize: 0,
+        totalSizeMB: 0,
+        categoryDistribution: [],
+        typeDistribution: [],
+        recentUploads: [],
+      };
+    } catch (error) {
+      console.error('Error in getStatistics:', error);
+      // Return default values instead of throwing
+      return {
+        totalFiles: 0,
+        totalSize: 0,
+        totalSizeMB: 0,
+        categoryDistribution: [],
+        typeDistribution: [],
+        recentUploads: [],
+      };
+    }
   }
 }

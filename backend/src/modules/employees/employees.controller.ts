@@ -26,7 +26,7 @@ import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('employees')
 @ApiBearerAuth()
-@Controller('api/v1/employees')
+@Controller('employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class EmployeesController {

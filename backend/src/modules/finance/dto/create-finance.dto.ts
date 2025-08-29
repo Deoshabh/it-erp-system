@@ -1,4 +1,4 @@
-import { IsString, IsDecimal, IsDateString, IsOptional } from 'class-validator';
+import { IsString, IsDecimal, IsDateString, IsOptional, IsArray, IsEmail } from 'class-validator';
 
 export class CreateInvoiceDto {
   @IsString()
@@ -6,6 +6,10 @@ export class CreateInvoiceDto {
 
   @IsString()
   clientName: string;
+
+  @IsOptional()
+  @IsEmail()
+  clientEmail?: string;
 
   @IsDecimal()
   amount: number;
@@ -16,6 +20,14 @@ export class CreateInvoiceDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @IsOptional()
+  @IsArray()
+  items?: any[];
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 export class CreateExpenseDto {
@@ -24,6 +36,10 @@ export class CreateExpenseDto {
 
   @IsString()
   category: string;
+
+  @IsOptional()
+  @IsString()
+  vendor?: string;
 
   @IsDecimal()
   amount: number;
@@ -34,4 +50,12 @@ export class CreateExpenseDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @IsOptional()
+  @IsString()
+  receiptUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

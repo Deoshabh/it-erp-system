@@ -9,7 +9,9 @@ export const databaseConfig = (configService: ConfigService): TypeOrmModuleOptio
   password: configService.get('DB_PASSWORD', 'password'),
   database: configService.get('DB_NAME', 'erp_system'),
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   synchronize: configService.get('NODE_ENV') !== 'production', // Auto-create tables in development
+  migrationsRun: configService.get('NODE_ENV') === 'production', // Run migrations in production
   logging: configService.get('NODE_ENV') === 'development',
   ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
 });

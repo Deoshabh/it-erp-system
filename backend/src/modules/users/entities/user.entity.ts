@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany } from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -60,6 +60,10 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
+
+  // Relations
+  @ManyToMany('Project', 'teamMembers')
+  assignedProjects: any[];
 
   @CreateDateColumn()
   createdAt: Date;

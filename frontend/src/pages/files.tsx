@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { formatCurrency } from '../utils/currency';
+import { fileService, FileEntity } from '../services/fileService';
 import {
   DocumentIcon,
   TrashIcon,
@@ -17,21 +18,8 @@ import {
   FunnelIcon
 } from '@heroicons/react/24/outline';
 
-interface FileRecord {
-  id: string;
-  filename: string;
-  originalName: string;
-  mimetype: string;
-  size: number;
-  uploadedAt: string;
-  category?: string;
-  relatedEntityType?: string;
-  relatedEntityId?: string;
-  path?: string;
-}
-
 const FilesPage: React.FC = () => {
-  const [files, setFiles] = useState<FileRecord[]>([]);
+  const [files, setFiles] = useState<FileEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -48,65 +36,12 @@ const FilesPage: React.FC = () => {
   const fetchFiles = async () => {
     try {
       setLoading(true);
-      // Simulate API call - replace with actual backend call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockData: FileRecord[] = [
-        {
-          id: '1',
-          filename: 'employee_handbook_2025.pdf',
-          originalName: 'Employee Handbook 2025.pdf',
-          mimetype: 'application/pdf',
-          size: 2048576,
-          uploadedAt: '2025-08-27T10:30:00Z',
-          category: 'hr_documents',
-          relatedEntityType: 'employee',
-          relatedEntityId: '1',
-        },
-        {
-          id: '2',
-          filename: 'quarterly_report_q3.xlsx',
-          originalName: 'Quarterly Report Q3.xlsx',
-          mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          size: 1024000,
-          uploadedAt: '2025-08-26T15:45:00Z',
-          category: 'finance_reports',
-          relatedEntityType: 'finance',
-          relatedEntityId: '1',
-        },
-        {
-          id: '3',
-          filename: 'company_logo.png',
-          originalName: 'Company Logo.png',
-          mimetype: 'image/png',
-          size: 512000,
-          uploadedAt: '2025-08-25T09:20:00Z',
-          category: 'marketing',
-        },
-        {
-          id: '4',
-          filename: 'training_video.mp4',
-          originalName: 'New Employee Training.mp4',
-          mimetype: 'video/mp4',
-          size: 15728640,
-          uploadedAt: '2025-08-24T14:15:00Z',
-          category: 'training',
-        },
-        {
-          id: '5',
-          filename: 'invoice_template.docx',
-          originalName: 'Invoice Template.docx',
-          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 256000,
-          uploadedAt: '2025-08-23T11:00:00Z',
-          category: 'templates',
-        }
-      ];
-      
-      setFiles(mockData);
-    } catch (err) {
-      setError('Failed to fetch files');
-      console.error('Error fetching files:', err);
+      setError(null);
+      const data = await fileService.getAllFiles();
+      setFiles(data);
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      setError('Failed to load files');
     } finally {
       setLoading(false);
     }
@@ -130,26 +65,10 @@ const FilesPage: React.FC = () => {
       setUploading(true);
       setError(null);
       
-      // Simulate file upload to backend with database persistence
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('category', selectedCategory);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const uploadedFile = await fileService.uploadFile(selectedFile, selectedCategory);
       
-      const newFile: FileRecord = {
-        id: Date.now().toString(),
-        filename: `${Date.now()}_${selectedFile.name}`,
-        originalName: selectedFile.name,
-        mimetype: selectedFile.type,
-        size: selectedFile.size,
-        uploadedAt: new Date().toISOString(),
-        category: selectedCategory,
-      };
-
-      // Add to state (simulating database persistence)
-      setFiles(prev => [newFile, ...prev]);
+      // Add to state
+      setFiles(prev => [uploadedFile, ...prev]);
       setSelectedFile(null);
       setSelectedCategory('general');
       
@@ -169,9 +88,7 @@ const FilesPage: React.FC = () => {
     if (!confirm('Are you sure you want to delete this file?')) return;
 
     try {
-      // Simulate API call to delete from database
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await fileService.deleteFile(id);
       setFiles(prev => prev.filter(file => file.id !== id));
     } catch (err) {
       setError('Failed to delete file');
@@ -179,17 +96,21 @@ const FilesPage: React.FC = () => {
     }
   };
 
-  const handleDownloadFile = (file: FileRecord) => {
-    // Simulate file download
-    const blob = new Blob(['File content placeholder'], { type: file.mimetype });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.originalName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownloadFile = async (file: FileEntity) => {
+    try {
+      const blob = await fileService.downloadFile(file.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.originalName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Failed to download file');
+      console.error('Error downloading file:', err);
+    }
   };
 
   const getFileIcon = (mimetype: string) => {

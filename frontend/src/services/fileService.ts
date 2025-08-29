@@ -26,35 +26,14 @@ export interface FileEntity {
   uploadedAt: string;
 }
 
-// Mock data for demo purposes
-let mockFiles: FileEntity[] = [
-  {
-    id: '1',
-    originalName: 'employee_handbook.pdf',
-    filename: 'emp_handbook_2024.pdf',
-    path: '/uploads/emp_handbook_2024.pdf',
-    mimetype: 'application/pdf',
-    size: 2048576,
-    category: 'documents',
-    relatedEntityType: 'employee',
-    relatedEntityId: '1',
-    uploadedAt: '2024-08-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    originalName: 'company_logo.png',
-    filename: 'logo_company_2024.png',
-    path: '/uploads/logo_company_2024.png',
-    mimetype: 'image/png',
-    size: 125678,
-    category: 'images',
-    uploadedAt: '2024-08-10T14:20:00Z'
-  }
-];
+export interface FileStats {
+  totalFiles: number;
+  totalStorage: number;
+  categories: { [key: string]: number };
+}
 
 class FileService {
-  private baseUrl = '/api/v1/files';
-  private useMockData = true; // Set to false when backend is ready
+  private baseUrl = '/files';
 
   async uploadFile(
     file: File,
@@ -62,141 +41,127 @@ class FileService {
     relatedEntityType?: string,
     relatedEntityId?: string
   ): Promise<FileUploadResponse> {
-    if (this.useMockData) {
-      const newFile: FileEntity = {
-        id: (mockFiles.length + 1).toString(),
-        originalName: file.name,
-        filename: `${Date.now()}_${file.name}`,
-        path: `/uploads/${Date.now()}_${file.name}`,
-        mimetype: file.type,
-        size: file.size,
-        category,
-        relatedEntityType,
-        relatedEntityId,
-        uploadedAt: new Date().toISOString()
-      };
-      mockFiles.push(newFile);
-      return Promise.resolve(newFile);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (category) formData.append('category', category);
+      if (relatedEntityType) formData.append('relatedEntityType', relatedEntityType);
+      if (relatedEntityId) formData.append('relatedEntityId', relatedEntityId);
+
+      const response = await apiClient.post(`${this.baseUrl}/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
     }
-
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    if (category) formData.append('category', category);
-    if (relatedEntityType) formData.append('relatedEntityType', relatedEntityType);
-    if (relatedEntityId) formData.append('relatedEntityId', relatedEntityId);
-
-    const response = await apiClient.post(`${this.baseUrl}/upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    return response.data;
   }
 
-  async getAllFiles(): Promise<{ data: FileEntity[] }> {
-    if (this.useMockData) {
-      return Promise.resolve({ data: [...mockFiles] });
+  async getAllFiles(): Promise<FileEntity[]> {
+    try {
+      const response = await apiClient.get(this.baseUrl);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      return [];
     }
-
-    const response = await apiClient.get(this.baseUrl);
-    return response.data;
   }
 
   async getFilesByEntity(
     entityType: string,
     entityId: string
-  ): Promise<{ data: FileEntity[] }> {
-    if (this.useMockData) {
-      const filtered = mockFiles.filter(f => 
-        f.relatedEntityType === entityType && f.relatedEntityId === entityId
+  ): Promise<FileEntity[]> {
+    try {
+      const response = await apiClient.get(
+        `${this.baseUrl}/by-entity/${entityType}/${entityId}`
       );
-      return Promise.resolve({ data: filtered });
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching files by entity:', error);
+      return [];
     }
-
-    const response = await apiClient.get(
-      `${this.baseUrl}/by-entity/${entityType}/${entityId}`
-    );
-    return response.data;
   }
 
   async downloadFile(fileId: string): Promise<Blob> {
-    if (this.useMockData) {
-      // Create a mock blob for demo
-      const content = `Mock file content for file ID: ${fileId}`;
-      return Promise.resolve(new Blob([content], { type: 'text/plain' }));
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${fileId}/download`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      throw error;
     }
-
-    const response = await apiClient.get(`${this.baseUrl}/${fileId}/download`, {
-      responseType: 'blob',
-    });
-    return response.data;
   }
 
   async deleteFile(fileId: string): Promise<void> {
-    if (this.useMockData) {
-      const index = mockFiles.findIndex(f => f.id === fileId);
-      if (index !== -1) {
-        mockFiles.splice(index, 1);
-      }
-      return Promise.resolve();
-    }
-
-    await apiClient.delete(`${this.baseUrl}/${fileId}`);
-  }
-
-  // Utility method to trigger download in browser
-  async triggerDownload(fileId: string, filename: string): Promise<void> {
     try {
-      const blob = await this.downloadFile(fileId);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      await apiClient.delete(`${this.baseUrl}/${fileId}`);
     } catch (error) {
-      console.error('Error downloading file:', error);
-      throw new Error('Failed to download file');
+      console.error('Error deleting file:', error);
+      throw error;
     }
   }
 
-  // Get file type icon class
-  getFileIcon(mimetype: string): string {
-    if (mimetype.startsWith('image/')) return 'text-green-500';
-    if (mimetype === 'application/pdf') return 'text-red-500';
-    if (mimetype.includes('word') || mimetype.includes('document')) return 'text-blue-500';
-    if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return 'text-green-600';
-    return 'text-gray-500';
+  async getFileStats(): Promise<FileStats> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/stats`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching file stats:', error);
+      return {
+        totalFiles: 0,
+        totalStorage: 0,
+        categories: {},
+      };
+    }
   }
 
-  // Format file size
+  // Helper methods
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  // Get file type display name
-  getFileTypeDisplay(mimetype: string): string {
-    const typeMap: { [key: string]: string } = {
-      'application/pdf': 'PDF',
-      'application/msword': 'Word Document',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word Document',
-      'application/vnd.ms-excel': 'Excel Spreadsheet',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel Spreadsheet',
-      'text/plain': 'Text File',
-      'image/jpeg': 'JPEG Image',
-      'image/png': 'PNG Image',
-      'image/gif': 'GIF Image',
-    };
+  getFileIcon(mimetype: string): string {
+    if (mimetype.startsWith('image/')) return '🖼️';
+    if (mimetype.startsWith('video/')) return '🎥';
+    if (mimetype.startsWith('audio/')) return '🎵';
+    if (mimetype.includes('pdf')) return '📄';
+    if (mimetype.includes('word')) return '📝';
+    if (mimetype.includes('sheet') || mimetype.includes('excel')) return '📊';
+    if (mimetype.includes('presentation') || mimetype.includes('powerpoint')) return '📋';
+    if (mimetype.includes('zip') || mimetype.includes('rar')) return '📦';
+    return '📎';
+  }
 
-    return typeMap[mimetype] || 'Unknown File Type';
+  async createFolder(name: string, parentId?: string): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/folders`, {
+        name,
+        parentId,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      throw error;
+    }
+  }
+
+  async getFolders(): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/folders`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+      return [];
+    }
   }
 }
 

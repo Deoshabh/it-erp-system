@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with default configuration
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -12,10 +12,12 @@ export const apiClient = axios.create({
 // Request interceptor for adding auth token
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Add auth token if available (check for browser environment)
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },

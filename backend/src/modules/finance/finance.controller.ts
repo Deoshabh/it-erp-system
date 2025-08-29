@@ -19,7 +19,7 @@ import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('finance')
 @ApiBearerAuth()
-@Controller('api/v1/finance')
+@Controller('finance')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}

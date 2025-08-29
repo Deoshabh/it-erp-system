@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindManyOptions, ILike, Between } from 'typeorm';
+import { Repository, Like, FindManyOptions, ILike } from 'typeorm';
 import { Employee, EmployeeStatus, EmploymentType } from './entities/employee.entity';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
@@ -283,13 +283,14 @@ export class EmployeesService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    const recentJoinings = await this.employeeRepository.find({
-      where: {
-        joiningDate: Between(thirtyDaysAgo.toISOString().split('T')[0], new Date().toISOString().split('T')[0])
-      },
-      order: { joiningDate: 'DESC' },
-      take: 10,
-    });
+    const recentJoinings = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .where('employee.joiningDate >= :startDate', { 
+        startDate: thirtyDaysAgo.toISOString().split('T')[0] 
+      })
+      .orderBy('employee.joiningDate', 'DESC')
+      .limit(10)
+      .getMany();
 
     return {
       total,

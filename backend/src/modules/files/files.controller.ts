@@ -16,7 +16,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { FilesService } from './files.service';
 
-@Controller('api/v1/files')
+@Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
@@ -63,6 +63,11 @@ export class FilesController {
     @Query('relatedEntityId') relatedEntityId?: string,
   ) {
     return this.filesService.saveFile(file, category, relatedEntityType, relatedEntityId);
+  }
+
+  @Get('stats')
+  getStatistics() {
+    return this.filesService.getStatistics();
   }
 
   @Get()

@@ -36,6 +36,7 @@ const ROLE_PERMISSIONS = {
     users: ['create', 'read', 'update', 'delete'],
     employees: ['create', 'read', 'update', 'delete'],
     finance: ['create', 'read', 'update', 'delete'],
+    inventory: ['create', 'read', 'update', 'delete'],
     procurement: ['create', 'read', 'update', 'delete', 'approve'],
     files: ['create', 'read', 'update', 'delete'],
     reports: ['create', 'read', 'update', 'delete'],
@@ -44,6 +45,7 @@ const ROLE_PERMISSIONS = {
     users: ['create', 'read', 'update'], // Cannot delete
     employees: ['create', 'read', 'update', 'delete'],
     finance: ['read'], // Read-only for HR-related expenses
+    inventory: ['read', 'update'], // Asset management
     procurement: ['create', 'read', 'update', 'approve'], // HR procurement
     files: ['create', 'read', 'update'],
     reports: ['create', 'read'],
@@ -52,6 +54,7 @@ const ROLE_PERMISSIONS = {
     users: ['read'], // Basic directory access
     employees: ['read', 'update'], // Team members only
     finance: ['read', 'update'], // Department budget
+    inventory: ['create', 'read', 'update'], // Department inventory
     procurement: ['create', 'read', 'update'], // Department requests
     files: ['create', 'read', 'update'],
     reports: ['create', 'read'],
@@ -60,6 +63,7 @@ const ROLE_PERMISSIONS = {
     users: ['read'],
     employees: ['read'], // For payroll
     finance: ['create', 'read', 'update', 'delete'],
+    inventory: ['read'], // Asset valuation
     procurement: ['read', 'approve'], // Financial approval
     files: ['create', 'read', 'update'],
     reports: ['create', 'read'],
@@ -68,6 +72,7 @@ const ROLE_PERMISSIONS = {
     users: ['read'],
     employees: ['read'], // Sales team only
     finance: ['read'], // Commission and sales revenue
+    inventory: ['read'], // Product inventory
     procurement: ['create', 'read'],
     files: ['create', 'read', 'update'],
     reports: ['create', 'read'],
@@ -75,6 +80,7 @@ const ROLE_PERMISSIONS = {
   employee: {
     employees: ['read'], // Own profile only
     finance: ['read'], // Own records only
+    inventory: ['read'], // View company assets
     procurement: ['create', 'read'], // Basic requests
     files: ['create', 'read'],
     reports: ['read'], // Own reports only
@@ -109,8 +115,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/v1/auth/login`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

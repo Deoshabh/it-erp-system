@@ -25,7 +25,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('users')
 @ApiBearerAuth()
-@Controller('api/v1/users')
+@Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class UsersController {
