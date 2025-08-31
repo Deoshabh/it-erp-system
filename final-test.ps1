@@ -17,7 +17,7 @@ $employeeLogin = @{
 try {
     $loginResponse = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method POST -Headers @{'Content-Type' = 'application/json'} -Body ($employeeLogin | ConvertTo-Json)
     $employeeToken = $loginResponse.access_token
-    Write-Host "   ✅ Employee login successful!" -ForegroundColor Green
+    Write-Host "   Employee login successful!" -ForegroundColor Green
     
     # Test procurement creation
     Write-Host "2. Testing procurement request creation..." -ForegroundColor Blue
@@ -39,17 +39,17 @@ try {
     }
 
     $procurementResponse = Invoke-RestMethod -Uri "$baseUrl/procurement" -Method POST -Headers $headers -Body ($procurementData | ConvertTo-Json)
-    Write-Host "   ✅ Procurement creation successful!" -ForegroundColor Green
+    Write-Host "   Procurement creation successful!" -ForegroundColor Green
     Write-Host "   Request ID: $($procurementResponse.requestId)" -ForegroundColor Green
     Write-Host "   Status: $($procurementResponse.status)" -ForegroundColor Gray
     Write-Host "   Created by: Employee user" -ForegroundColor Gray
     
     Write-Host ""
-    Write-Host "🎉 ISSUE RESOLVED! 🎉" -ForegroundColor Green
+    Write-Host "ISSUE RESOLVED!" -ForegroundColor Green
     Write-Host "Employee users can now successfully create procurement requests." -ForegroundColor Green
     
 } catch {
-    Write-Host "   ❌ Test failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "   Test failed: $($_.Exception.Message)" -ForegroundColor Red
     if ($_.Exception.Response) {
         $statusCode = $_.Exception.Response.StatusCode
         Write-Host "   Status Code: $statusCode" -ForegroundColor Red
@@ -58,11 +58,11 @@ try {
 
 Write-Host ""
 Write-Host "=== Test Summary ===" -ForegroundColor Yellow
-Write-Host "✅ Authentication: Working" -ForegroundColor Green  
-Write-Host "✅ Employee Login: Working" -ForegroundColor Green
-Write-Host "✅ Procurement Creation: Working" -ForegroundColor Green
-Write-Host "✅ JWT Token Extraction: Fixed (using req.user.sub)" -ForegroundColor Green
-Write-Host "✅ RequesterId Constraint: Resolved" -ForegroundColor Green
+Write-Host "Authentication: Working" -ForegroundColor Green  
+Write-Host "Employee Login: Working" -ForegroundColor Green
+Write-Host "Procurement Creation: Working" -ForegroundColor Green
+Write-Host "JWT Token Extraction: Fixed (using req.user.sub)" -ForegroundColor Green
+Write-Host "RequesterId Constraint: Resolved" -ForegroundColor Green
 Write-Host ""
 Write-Host "Available Test Users:" -ForegroundColor Cyan
 Write-Host "- Admin: admin@admin.com / admin123" -ForegroundColor Gray
