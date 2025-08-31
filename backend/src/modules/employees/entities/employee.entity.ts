@@ -16,6 +16,75 @@ export enum EmploymentType {
   CONSULTANT = 'consultant',
 }
 
+export enum Department {
+  INFORMATION_TECHNOLOGY = 'information_technology',
+  HUMAN_RESOURCES = 'human_resources',
+  FINANCE = 'finance',
+  SALES = 'sales',
+  MARKETING = 'marketing',
+  OPERATIONS = 'operations',
+  CUSTOMER_SERVICE = 'customer_service',
+  PROCUREMENT = 'procurement',
+  QUALITY_ASSURANCE = 'quality_assurance',
+  RESEARCH_DEVELOPMENT = 'research_development',
+  ADMINISTRATION = 'administration',
+  LEGAL = 'legal',
+}
+
+export enum Designation {
+  // Management
+  CEO = 'ceo',
+  CTO = 'cto',
+  CFO = 'cfo',
+  DIRECTOR = 'director',
+  MANAGER = 'manager',
+  ASSISTANT_MANAGER = 'assistant_manager',
+  
+  // IT
+  SENIOR_SOFTWARE_ENGINEER = 'senior_software_engineer',
+  SOFTWARE_ENGINEER = 'software_engineer',
+  JUNIOR_SOFTWARE_ENGINEER = 'junior_software_engineer',
+  SYSTEM_ADMINISTRATOR = 'system_administrator',
+  DEVOPS_ENGINEER = 'devops_engineer',
+  QA_ENGINEER = 'qa_engineer',
+  
+  // HR
+  HR_MANAGER = 'hr_manager',
+  HR_EXECUTIVE = 'hr_executive',
+  RECRUITER = 'recruiter',
+  
+  // Finance
+  FINANCE_MANAGER = 'finance_manager',
+  ACCOUNTANT = 'accountant',
+  ACCOUNTS_EXECUTIVE = 'accounts_executive',
+  
+  // Sales
+  SALES_MANAGER = 'sales_manager',
+  SALES_EXECUTIVE = 'sales_executive',
+  BUSINESS_DEVELOPMENT_EXECUTIVE = 'business_development_executive',
+  
+  // Marketing
+  MARKETING_MANAGER = 'marketing_manager',
+  MARKETING_EXECUTIVE = 'marketing_executive',
+  DIGITAL_MARKETING_SPECIALIST = 'digital_marketing_specialist',
+  
+  // Operations
+  OPERATIONS_MANAGER = 'operations_manager',
+  OPERATIONS_EXECUTIVE = 'operations_executive',
+  
+  // Customer Service
+  CUSTOMER_SERVICE_MANAGER = 'customer_service_manager',
+  CUSTOMER_SERVICE_REPRESENTATIVE = 'customer_service_representative',
+  
+  // General
+  INTERN = 'intern',
+  TRAINEE = 'trainee',
+  CONSULTANT = 'consultant',
+  COORDINATOR = 'coordinator',
+  SPECIALIST = 'specialist',
+  EXECUTIVE = 'executive',
+}
+
 @Entity('employees')
 @Index(['department', 'designation'])
 @Index(['status'])
@@ -40,11 +109,11 @@ export class Employee {
   @Column()
   phone: string;
 
-  @Column()
-  department: string;
+  @Column({ type: 'enum', enum: Department, nullable: true })
+  department?: Department;
 
-  @Column()
-  designation: string;
+  @Column({ type: 'enum', enum: Designation })
+  designation: Designation;
 
   @Column('decimal', { precision: 15, scale: 2, comment: 'Salary in INR' })
   salary: number;

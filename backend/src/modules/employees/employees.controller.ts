@@ -22,6 +22,7 @@ import { Employee, EmployeeStatus, EmploymentType } from './entities/employee.en
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('employees')
@@ -80,17 +81,27 @@ export class EmployeesController {
   }
 
   @Get('departments')
-  @ApiOperation({ summary: 'Get all unique departments' })
+  @Public()
+  @ApiOperation({ summary: 'Get all available departments' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Departments list retrieved successfully' })
-  async getDepartments(): Promise<string[]> {
+  async getDepartments(): Promise<Array<{ value: string; label: string }>> {
     return await this.employeesService.getDepartments();
   }
 
   @Get('designations')
-  @ApiOperation({ summary: 'Get all unique designations' })
+  @Public()
+  @ApiOperation({ summary: 'Get all available designations' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Designations list retrieved successfully' })
-  async getDesignations(): Promise<string[]> {
+  async getDesignations(): Promise<Array<{ value: string; label: string }>> {
     return await this.employeesService.getDesignations();
+  }
+
+  @Get('designations/:department')
+  @Public()
+  @ApiOperation({ summary: 'Get designations by department' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Department-specific designations retrieved successfully' })
+  async getDesignationsByDepartment(@Param('department') department: string): Promise<Array<{ value: string; label: string }>> {
+    return await this.employeesService.getDesignationsByDepartment(department as any);
   }
 
   @Get('salary-range')

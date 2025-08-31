@@ -12,7 +12,7 @@ import {
   Matches
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { EmployeeStatus, EmploymentType } from '../entities/employee.entity';
+import { EmployeeStatus, EmploymentType, Department, Designation } from '../entities/employee.entity';
 
 export class CreateEmployeeDto {
   @IsString({ message: 'Employee ID must be a string' })
@@ -40,13 +40,13 @@ export class CreateEmployeeDto {
   @Matches(/^[6-9]\d{9}$/, { message: 'Please provide a valid 10-digit Indian mobile number' })
   phone: string;
 
-  @IsString({ message: 'Department must be a string' })
-  @IsNotEmpty({ message: 'Department is required' })
-  department: string;
+  @IsOptional()
+  @IsEnum(Department, { message: 'Department must be a valid department' })
+  department?: Department;
 
-  @IsString({ message: 'Designation must be a string' })
+  @IsEnum(Designation, { message: 'Designation must be a valid designation' })
   @IsNotEmpty({ message: 'Designation is required' })
-  designation: string;
+  designation: Designation;
 
   @IsNumber({}, { message: 'Salary must be a number' })
   @IsPositive({ message: 'Salary must be a positive number' })

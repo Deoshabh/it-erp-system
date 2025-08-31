@@ -1,5 +1,5 @@
 import { IsEmail, IsOptional, IsEnum, IsString, MinLength } from 'class-validator';
-import { UserRole, UserStatus } from '../entities/user.entity';
+import { UserRole, UserStatus, Department, Designation } from '../entities/user.entity';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -36,10 +36,10 @@ export class UpdateUserDto {
   status?: UserStatus;
 
   @IsOptional()
-  @IsString({ message: 'Department must be a string' })
-  department?: string;
+  @IsEnum(Department, { message: 'Department must be a valid department' })
+  department?: Department;
 
   @IsOptional()
-  @IsString({ message: 'Designation must be a string' })
-  designation?: string;
+  @IsEnum(Designation, { message: 'Designation must be a valid designation' })
+  designation?: Designation;
 }

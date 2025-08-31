@@ -36,6 +36,9 @@ const ROLE_PERMISSIONS = {
     users: ['create', 'read', 'update', 'delete'],
     employees: ['create', 'read', 'update', 'delete'],
     finance: ['create', 'read', 'update', 'delete'],
+    sales: ['create', 'read', 'update', 'delete'],
+    projects: ['create', 'read', 'update', 'delete'],
+    notifications: ['create', 'read', 'update', 'delete'],
     inventory: ['create', 'read', 'update', 'delete'],
     procurement: ['create', 'read', 'update', 'delete', 'approve'],
     files: ['create', 'read', 'update', 'delete'],
@@ -45,6 +48,9 @@ const ROLE_PERMISSIONS = {
     users: ['create', 'read', 'update'], // Cannot delete
     employees: ['create', 'read', 'update', 'delete'],
     finance: ['read'], // Read-only for HR-related expenses
+    sales: ['read'], // HR can view sales data
+    projects: ['create', 'read', 'update'], // HR manages projects
+    notifications: ['create', 'read', 'update'],
     inventory: ['read', 'update'], // Asset management
     procurement: ['create', 'read', 'update', 'approve'], // HR procurement
     files: ['create', 'read', 'update'],
@@ -54,6 +60,9 @@ const ROLE_PERMISSIONS = {
     users: ['read'], // Basic directory access
     employees: ['read', 'update'], // Team members only
     finance: ['read', 'update'], // Department budget
+    sales: ['create', 'read', 'update'], // Sales management
+    projects: ['create', 'read', 'update', 'delete'], // Project management
+    notifications: ['create', 'read', 'update'],
     inventory: ['create', 'read', 'update'], // Department inventory
     procurement: ['create', 'read', 'update'], // Department requests
     files: ['create', 'read', 'update'],
@@ -63,6 +72,9 @@ const ROLE_PERMISSIONS = {
     users: ['read'],
     employees: ['read'], // For payroll
     finance: ['create', 'read', 'update', 'delete'],
+    sales: ['read', 'update'], // Finance tracks sales revenue
+    projects: ['read'], // Project budgets
+    notifications: ['read'],
     inventory: ['read'], // Asset valuation
     procurement: ['read', 'approve'], // Financial approval
     files: ['create', 'read', 'update'],
@@ -72,6 +84,9 @@ const ROLE_PERMISSIONS = {
     users: ['read'],
     employees: ['read'], // Sales team only
     finance: ['read'], // Commission and sales revenue
+    sales: ['create', 'read', 'update', 'delete'], // Full sales access
+    projects: ['read', 'update'], // Sales project involvement
+    notifications: ['read'],
     inventory: ['read'], // Product inventory
     procurement: ['create', 'read'],
     files: ['create', 'read', 'update'],
@@ -80,6 +95,9 @@ const ROLE_PERMISSIONS = {
   employee: {
     employees: ['read'], // Own profile only
     finance: ['read'], // Own records only
+    sales: ['read'], // View sales data
+    projects: ['read'], // View assigned projects
+    notifications: ['read'],
     inventory: ['read'], // View company assets
     procurement: ['create', 'read'], // Basic requests
     files: ['create', 'read'],

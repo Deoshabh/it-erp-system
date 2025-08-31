@@ -174,6 +174,36 @@ class UsersService {
       throw error;
     }
   }
+
+  async getDepartments(): Promise<Array<{ value: string; label: string }>> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/departments`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      throw error;
+    }
+  }
+
+  async getDesignations(): Promise<Array<{ value: string; label: string }>> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/designations`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching designations:', error);
+      throw error;
+    }
+  }
+
+  async getDesignationsByDepartment(department: string): Promise<Array<{ value: string; label: string }>> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/designations/${department}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching designations by department:', error);
+      throw error;
+    }
+  }
 }
 
 export const usersService = new UsersService();

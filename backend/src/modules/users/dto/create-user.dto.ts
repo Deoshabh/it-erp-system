@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsEnum, IsString, MinLength, IsPhoneNumber } from 'class-validator';
-import { UserRole } from '../entities/user.entity';
+import { UserRole, Department, Designation } from '../entities/user.entity';
 
 export class CreateUserDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })
@@ -32,10 +32,10 @@ export class CreateUserDto {
   avatar?: string;
 
   @IsOptional()
-  @IsString({ message: 'Department must be a string' })
-  department?: string;
+  @IsEnum(Department, { message: 'Department must be a valid department' })
+  department?: Department;
 
   @IsOptional()
-  @IsString({ message: 'Designation must be a string' })
-  designation?: string;
+  @IsEnum(Designation, { message: 'Designation must be a valid designation' })
+  designation?: Designation;
 }

@@ -2,9 +2,10 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindManyOptions, ILike } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User, UserRole, UserStatus } from './entities/user.entity';
+import { User, UserRole, UserStatus, Department, Designation } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { getDesignationsByDepartment, formatDesignationLabel, formatDepartmentLabel } from './utils/department-designation-mapping';
 
 export interface UserSearchFilters {
   search?: string;
@@ -179,7 +180,103 @@ export class UsersService {
 
   async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
+    
+    // Check for related records that would prevent deletion
+    const relatedRecords = await this.checkRelatedRecords(id);
+    
+    if (relatedRecords.hasRelated) {
+      throw new Error(
+        `Cannot delete user. User has related records: ${relatedRecords.relations.join(', ')}. ` +
+        'Please use soft delete instead or reassign/delete related records first.'
+      );
+    }
+    
     await this.userRepository.remove(user);
+  }
+
+  async softDelete(id: string): Promise<void> {
+    const user = await this.findOne(id);
+    await this.userRepository.softDelete(id);
+  }
+
+  async restore(id: string): Promise<void> {
+    await this.userRepository.restore(id);
+  }
+
+  async forceDelete(id: string): Promise<void> {
+    const user = await this.userRepository.findOne({ 
+      where: { id }, 
+      withDeleted: true 
+    });
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    await this.userRepository.remove(user);
+  }
+
+  private async checkRelatedRecords(userId: string): Promise<{ hasRelated: boolean; relations: string[] }> {
+    const relations: string[] = [];
+    
+    // Check procurement requests
+    const procurementRequests = await this.userRepository.manager.query(
+      'SELECT COUNT(*) as count FROM procurement_requests WHERE "requesterId" = $1 OR "approverId" = $1',
+      [userId]
+    );
+    if (parseInt(procurementRequests[0].count) > 0) {
+      relations.push(`${procurementRequests[0].count} procurement request(s)`);
+    }
+    
+    // Check projects as manager
+    const projectsAsManager = await this.userRepository.manager.query(
+      'SELECT COUNT(*) as count FROM projects WHERE "managerId" = $1',
+      [userId]
+    );
+    if (parseInt(projectsAsManager[0].count) > 0) {
+      relations.push(`${projectsAsManager[0].count} project(s) as manager`);
+    }
+    
+    // Check project team members
+    const projectTeamMembers = await this.userRepository.manager.query(
+      'SELECT COUNT(*) as count FROM project_team_members WHERE "userId" = $1',
+      [userId]
+    );
+    if (parseInt(projectTeamMembers[0].count) > 0) {
+      relations.push(`${projectTeamMembers[0].count} project team membership(s)`);
+    }
+    
+    // Check leads
+    const leads = await this.userRepository.manager.query(
+      'SELECT COUNT(*) as count FROM leads WHERE "assignedToId" = $1 OR "createdById" = $1',
+      [userId]
+    );
+    if (parseInt(leads[0].count) > 0) {
+      relations.push(`${leads[0].count} lead(s)`);
+    }
+    
+    // Check customers
+    const customers = await this.userRepository.manager.query(
+      'SELECT COUNT(*) as count FROM customers WHERE "accountManagerId" = $1 OR "createdById" = $1',
+      [userId]
+    );
+    if (parseInt(customers[0].count) > 0) {
+      relations.push(`${customers[0].count} customer(s)`);
+    }
+    
+    // Check opportunities
+    const opportunities = await this.userRepository.manager.query(
+      'SELECT COUNT(*) as count FROM opportunities WHERE "ownerId" = $1 OR "createdById" = $1',
+      [userId]
+    );
+    if (parseInt(opportunities[0].count) > 0) {
+      relations.push(`${opportunities[0].count} opportunit(y/ies)`);
+    }
+    
+    return {
+      hasRelated: relations.length > 0,
+      relations
+    };
   }
 
   async count(): Promise<number> {
@@ -237,5 +334,29 @@ export class UsersService {
 
   async updateLastLogin(id: string): Promise<void> {
     await this.userRepository.update(id, { lastLoginAt: new Date() });
+  }
+
+  async getDepartments(): Promise<Array<{ value: string; label: string }>> {
+    const departments = Object.values(Department);
+    return departments.map(dept => ({
+      value: dept,
+      label: formatDepartmentLabel(dept)
+    }));
+  }
+
+  async getDesignations(): Promise<Array<{ value: string; label: string }>> {
+    const designations = Object.values(Designation);
+    return designations.map(designation => ({
+      value: designation,
+      label: formatDesignationLabel(designation)
+    }));
+  }
+
+  async getDesignationsByDepartment(department: Department): Promise<Array<{ value: string; label: string }>> {
+    const designations = getDesignationsByDepartment(department);
+    return designations.map(designation => ({
+      value: designation,
+      label: formatDesignationLabel(designation)
+    }));
   }
 }

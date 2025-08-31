@@ -12,7 +12,9 @@ import {
   ParseUUIDPipe,
   UsePipes,
   ValidationPipe,
-  Request
+  Request,
+  BadRequestException,
+  NotFoundException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService, UserSearchFilters } from './users.service';
@@ -22,6 +24,7 @@ import { User, UserRole, UserStatus } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -86,6 +89,30 @@ export class UsersController {
     return { count };
   }
 
+  @Get('departments')
+  @Public()
+  @ApiOperation({ summary: 'Get all available departments' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Departments retrieved successfully' })
+  async getDepartments(): Promise<Array<{ value: string; label: string }>> {
+    return this.usersService.getDepartments();
+  }
+
+  @Get('designations')
+  @Public()
+  @ApiOperation({ summary: 'Get all available designations' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Designations retrieved successfully' })
+  async getDesignations(): Promise<Array<{ value: string; label: string }>> {
+    return this.usersService.getDesignations();
+  }
+
+  @Get('designations/:department')
+  @Public()
+  @ApiOperation({ summary: 'Get designations by department' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Department-specific designations retrieved successfully' })
+  async getDesignationsByDepartment(@Param('department') department: string): Promise<Array<{ value: string; label: string }>> {
+    return this.usersService.getDesignationsByDepartment(department as any);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'User retrieved successfully' })
@@ -107,12 +134,48 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete user' })
+  @ApiOperation({ summary: 'Delete user (hard delete)' })
   @ApiResponse({ status: HttpStatus.OK, description: 'User deleted successfully' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Cannot delete user with related records' })
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
-    await this.usersService.remove(id);
-    return { message: 'User deleted successfully' };
+    try {
+      await this.usersService.remove(id);
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      if (error.message.includes('related records')) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  @Delete(':id/soft')
+  @ApiOperation({ summary: 'Soft delete user (keeps user data but marks as deleted)' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'User soft deleted successfully' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
+  async softDelete(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
+    await this.usersService.softDelete(id);
+    return { message: 'User soft deleted successfully' };
+  }
+
+  @Post(':id/restore')
+  @ApiOperation({ summary: 'Restore soft deleted user' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'User restored successfully' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
+  async restore(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
+    await this.usersService.restore(id);
+    return { message: 'User restored successfully' };
+  }
+
+  @Delete(':id/force')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Force delete user (admin only - permanently removes user even if soft deleted)' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'User force deleted successfully' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
+  async forceDelete(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
+    await this.usersService.forceDelete(id);
+    return { message: 'User force deleted successfully' };
   }
 
   @Post('bulk-delete')

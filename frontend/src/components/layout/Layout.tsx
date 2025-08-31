@@ -14,7 +14,10 @@ import {
   FolderOpen,
   Menu,
   X,
-  LogOut
+  LogOut,
+  TrendingUp,
+  Bell,
+  Briefcase
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -64,6 +67,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       action: 'read'
     },
     { 
+      name: 'Sales', 
+      href: '/sales', 
+      icon: TrendingUp,
+      current: router.pathname === '/sales' || router.pathname.startsWith('/sales'),
+      resource: 'sales',
+      action: 'read'
+    },
+    { 
+      name: 'Projects', 
+      href: '/projects', 
+      icon: Briefcase,
+      current: router.pathname === '/projects' || router.pathname.startsWith('/projects'),
+      resource: 'projects',
+      action: 'read'
+    },
+    { 
       name: 'Inventory', 
       href: '/inventory', 
       icon: Package,
@@ -77,6 +96,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       icon: ShoppingCart,
       current: router.pathname === '/procurement',
       resource: 'procurement',
+      action: 'read'
+    },
+    { 
+      name: 'Notifications', 
+      href: '/notifications', 
+      icon: Bell,
+      current: router.pathname === '/notifications' || router.pathname.startsWith('/notifications'),
+      resource: 'notifications',
       action: 'read'
     },
     { 

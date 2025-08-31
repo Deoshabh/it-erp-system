@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindManyOptions, ILike } from 'typeorm';
-import { Employee, EmployeeStatus, EmploymentType } from './entities/employee.entity';
+import { Employee, EmployeeStatus, EmploymentType, Department, Designation } from './entities/employee.entity';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { getDesignationsByDepartment, formatDesignationLabel, formatDepartmentLabel } from './utils/department-designation-mapping';
 
 export interface EmployeeSearchFilters {
   search?: string;
@@ -316,24 +317,28 @@ export class EmployeesService {
     };
   }
 
-  async getDepartments(): Promise<string[]> {
-    const result = await this.employeeRepository
-      .createQueryBuilder('employee')
-      .select('DISTINCT employee.department', 'department')
-      .orderBy('employee.department', 'ASC')
-      .getRawMany();
-
-    return result.map(r => r.department).filter(dept => dept);
+  async getDepartments(): Promise<Array<{ value: string; label: string }>> {
+    const departments = Object.values(Department);
+    return departments.map(dept => ({
+      value: dept,
+      label: formatDepartmentLabel(dept)
+    }));
   }
 
-  async getDesignations(): Promise<string[]> {
-    const result = await this.employeeRepository
-      .createQueryBuilder('employee')
-      .select('DISTINCT employee.designation', 'designation')
-      .orderBy('employee.designation', 'ASC')
-      .getRawMany();
+  async getDesignations(): Promise<Array<{ value: string; label: string }>> {
+    const designations = Object.values(Designation);
+    return designations.map(designation => ({
+      value: designation,
+      label: formatDesignationLabel(designation)
+    }));
+  }
 
-    return result.map(r => r.designation).filter(designation => designation);
+  async getDesignationsByDepartment(department: Department): Promise<Array<{ value: string; label: string }>> {
+    const designations = getDesignationsByDepartment(department);
+    return designations.map(designation => ({
+      value: designation,
+      label: formatDesignationLabel(designation)
+    }));
   }
 
   async bulkDelete(ids: string[]): Promise<void> {

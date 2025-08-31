@@ -43,7 +43,7 @@ export const FileManager: React.FC<FileManagerProps> = ({
         response = await fileService.getAllFiles();
       }
 
-      setFiles(response.data || []);
+      setFiles(response || []);
     } catch (error) {
       console.error('Failed to load files:', error);
       setError('Failed to load files');
@@ -76,7 +76,8 @@ export const FileManager: React.FC<FileManagerProps> = ({
 
   const handleDownload = async (file: FileEntity) => {
     try {
-      await fileService.triggerDownload(file.id, file.originalName);
+      // Create a simple download trigger
+      window.open(`/api/files/${file.id}/download`, '_blank');
     } catch (error) {
       console.error('Download failed:', error);
       alert('Failed to download file');
@@ -169,7 +170,7 @@ export const FileManager: React.FC<FileManagerProps> = ({
                         {file.originalName}
                       </p>
                       <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>{fileService.getFileTypeDisplay(file.mimetype)}</span>
+                        <span>{file.mimetype}</span>
                         <span>•</span>
                         <span>{fileService.formatFileSize(file.size)}</span>
                         <span>•</span>

@@ -179,7 +179,7 @@ class EmployeeService {
     }
   }
 
-  async getDepartments(): Promise<string[]> {
+  async getDepartments(): Promise<Array<{ value: string; label: string }>> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/departments`);
       return response.data;
@@ -189,12 +189,22 @@ class EmployeeService {
     }
   }
 
-  async getDesignations(): Promise<string[]> {
+  async getDesignations(): Promise<Array<{ value: string; label: string }>> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/designations`);
       return response.data;
     } catch (error) {
       console.error('Error fetching designations:', error);
+      throw error;
+    }
+  }
+
+  async getDesignationsByDepartment(department: string): Promise<Array<{ value: string; label: string }>> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/designations/${department}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching designations by department:', error);
       throw error;
     }
   }

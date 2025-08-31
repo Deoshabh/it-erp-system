@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AppModule } from '../app.module';
-import { User, UserRole, UserStatus, Department, Designation } from '../modules/users/entities/user.entity';
+import { User, UserRole, UserStatus } from '../modules/users/entities/user.entity';
 
 async function seed() {
   const app = await NestFactory.create(AppModule);
@@ -26,8 +26,8 @@ async function seed() {
         lastName: 'Administrator',
         role: UserRole.ADMIN,
         status: UserStatus.ACTIVE,
-        department: Department.INFORMATION_TECHNOLOGY,
-        designation: Designation.SYSTEM_ADMINISTRATOR,
+        department: 'IT',
+        designation: 'System Administrator',
       });
 
       await userRepository.save(adminUser);
@@ -38,39 +38,38 @@ async function seed() {
       console.log('Admin user already exists');
     }
 
-    // Create default HR user
-    const existingHR = await userRepository.findOne({
-      where: { email: 'hr@test.com' }
+    // Create default employee user
+    const existingEmployee = await userRepository.findOne({
+      where: { email: 'employee@test.com' }
     });
 
-    if (!existingHR) {
-      const hashedPassword = await bcrypt.hash('hr123456', 10);
+    if (!existingEmployee) {
+      const hashedPassword = await bcrypt.hash('employee123', 10);
       
-      const hrUser = userRepository.create({
-        email: 'hr@test.com',
+      const employeeUser = userRepository.create({
+        email: 'employee@test.com',
         password: hashedPassword,
-        firstName: 'HR',
-        lastName: 'Manager',
-        role: UserRole.HR,
+        firstName: 'Test',
+        lastName: 'Employee',
+        role: UserRole.EMPLOYEE,
         status: UserStatus.ACTIVE,
-        department: Department.HUMAN_RESOURCES,
-        designation: Designation.HR_MANAGER,
+        department: 'General',
+        designation: 'Employee',
       });
 
-      await userRepository.save(hrUser);
-      console.log('Default HR user created:');
-      console.log('Email: hr@test.com');
-      console.log('Password: hr123456');
+      await userRepository.save(employeeUser);
+      console.log('Default employee user created:');
+      console.log('Email: employee@test.com');
+      console.log('Password: employee123');
     } else {
-      console.log('HR user already exists');
+      console.log('Employee user already exists');
     }
 
-    console.log('Seeding completed successfully!');
   } catch (error) {
-    console.error('Error during seeding:', error);
+    console.error('Seeding failed:', error);
+  } finally {
+    await app.close();
   }
-
-  await app.close();
 }
 
 seed();
