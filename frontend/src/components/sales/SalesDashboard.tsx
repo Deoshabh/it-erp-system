@@ -1,221 +1,372 @@
-import React from 'react';
-import { Lead, Customer, Opportunity } from '../../services/salesService';
-import { TrendingUp, Users, Target, DollarSign, BarChart3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Users, 
+  MessageSquare, 
+  FileText, 
+  CheckCircle, 
+  ShoppingCart, 
+  Truck, 
+  Receipt, 
+  RotateCcw,
+  TrendingUp,
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  IndianRupee
+} from 'lucide-react';
+import SalesPerformance from './SalesPerformance';
 
 interface SalesDashboardProps {
   stats: {
-    totalLeads: number;
     totalCustomers: number;
-    totalOpportunities: number;
+    totalEnquiries: number;
+    totalQuotations: number;
+    totalOrders: number;
     totalRevenue: number;
-    conversionRate: number;
-    pipelineValue: number;
+    pendingDispatches: number;
+    overdueInvoices: number;
+    activeReturns: number;
   };
-  leads: Lead[];
-  customers: Customer[];
-  opportunities: Opportunity[];
-  onRefresh: () => void;
+  onTabChange: (tab: string) => void;
 }
 
-const SalesDashboard: React.FC<SalesDashboardProps> = ({
-  stats,
-  leads,
-  customers,
-  opportunities,
-  onRefresh
-}) => {
-  // Ensure leads is an array to prevent runtime errors
-  const safeLeads = Array.isArray(leads) ? leads : [];
-  const safeCustomers = Array.isArray(customers) ? customers : [];
-  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+const SalesDashboard: React.FC<SalesDashboardProps> = ({ stats, onTabChange }) => {
+  const [showPerformance, setShowPerformance] = useState(false);
+  const quickActions = [
+    {
+      name: 'Add Customer',
+      description: 'Register a new customer',
+      icon: Users,
+      color: 'bg-blue-500',
+      action: () => onTabChange('customers')
+    },
+    {
+      name: 'New Enquiry',
+      description: 'Create a sales enquiry',
+      icon: MessageSquare,
+      color: 'bg-green-500',
+      action: () => onTabChange('enquiry')
+    },
+    {
+      name: 'Create Quotation',
+      description: 'Generate a quotation',
+      icon: FileText,
+      color: 'bg-purple-500',
+      action: () => onTabChange('quotation')
+    },
+    {
+      name: 'Sales Order',
+      description: 'Manage sales orders',
+      icon: ShoppingCart,
+      color: 'bg-orange-500',
+      action: () => onTabChange('sales-order')
+    }
+  ];
 
-  // Get recent leads (last 5)
-  const recentLeads = safeLeads.slice(0, 5);
+  const moduleStats = [
+    {
+      name: 'Customers',
+      value: stats.totalCustomers,
+      icon: Users,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+      action: () => onTabChange('customers')
+    },
+    {
+      name: 'Enquiries',
+      value: stats.totalEnquiries,
+      icon: MessageSquare,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      action: () => onTabChange('enquiry')
+    },
+    {
+      name: 'Quotations',
+      value: stats.totalQuotations,
+      icon: FileText,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+      action: () => onTabChange('quotation')
+    },
+    {
+      name: 'Orders',
+      value: stats.totalOrders,
+      icon: ShoppingCart,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+      action: () => onTabChange('sales-order')
+    },
+    {
+      name: 'Pending Dispatches',
+      value: stats.pendingDispatches,
+      icon: Truck,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-100',
+      action: () => onTabChange('dispatch')
+    },
+    {
+      name: 'Overdue Invoices',
+      value: stats.overdueInvoices,
+      icon: AlertTriangle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100',
+      action: () => onTabChange('invoice')
+    },
+    {
+      name: 'Active Returns',
+      value: stats.activeReturns,
+      icon: RotateCcw,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-100',
+      action: () => onTabChange('returns')
+    },
+    {
+      name: 'Total Revenue',
+      value: `₹${(stats.totalRevenue || 0).toLocaleString('en-IN')}`,
+      icon: IndianRupee,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100',
+      action: () => onTabChange('invoice')
+    }
+  ];
 
-  // Get high-value opportunities
-  const highValueOpportunities = safeOpportunities
-    .filter(opp => opp.value > 10000)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
+  const recentActivities = [
+    {
+      action: 'New customer registered',
+      customer: 'Acme Corp',
+      time: '2 hours ago',
+      type: 'customer'
+    },
+    {
+      action: 'Quotation sent',
+      customer: 'TechStart Inc',
+      time: '4 hours ago',
+      type: 'quotation'
+    },
+    {
+      action: 'Order confirmed',
+      customer: 'Global Systems',
+      time: '6 hours ago',
+      type: 'order'
+    },
+    {
+      action: 'Invoice overdue',
+      customer: 'Local Business',
+      time: '1 day ago',
+      type: 'invoice'
+    },
+    {
+      action: 'Dispatch completed',
+      customer: 'Regional Corp',
+      time: '2 days ago',
+      type: 'dispatch'
+    }
+  ];
 
-  // Get leads by status
-  const leadsByStatus = safeLeads.reduce((acc, lead) => {
-    acc[lead.status] = (acc[lead.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Get opportunities by stage
-  const opportunitiesByStage = safeOpportunities.reduce((acc, opp) => {
-    acc[opp.stage] = (acc[opp.stage] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      'new': 'bg-blue-100 text-blue-800',
-      'contacted': 'bg-yellow-100 text-yellow-800',
-      'qualified': 'bg-green-100 text-green-800',
-      'proposal': 'bg-purple-100 text-purple-800',
-      'negotiation': 'bg-orange-100 text-orange-800',
-      'closed_won': 'bg-green-100 text-green-800',
-      'closed_lost': 'bg-red-100 text-red-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'customer': return Users;
+      case 'quotation': return FileText;
+      case 'order': return ShoppingCart;
+      case 'invoice': return Receipt;
+      case 'dispatch': return Truck;
+      default: return Clock;
+    }
   };
 
-  const getStageColor = (stage: string) => {
-    const colors: Record<string, string> = {
-      'prospecting': 'bg-blue-100 text-blue-800',
-      'qualification': 'bg-yellow-100 text-yellow-800',
-      'needs_analysis': 'bg-purple-100 text-purple-800',
-      'proposal': 'bg-orange-100 text-orange-800',
-      'negotiation': 'bg-red-100 text-red-800',
-      'closed_won': 'bg-green-100 text-green-800',
-      'closed_lost': 'bg-gray-100 text-gray-800'
-    };
-    return colors[stage] || 'bg-gray-100 text-gray-800';
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'customer': return 'text-blue-500';
+      case 'quotation': return 'text-purple-500';
+      case 'order': return 'text-green-500';
+      case 'invoice': return 'text-red-500';
+      case 'dispatch': return 'text-yellow-500';
+      default: return 'text-gray-500';
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Performance Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Lead Status Distribution */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Lead Status Distribution
-            </h3>
-            <div className="space-y-3">
-              {Object.entries(leadsByStatus).map(([status, count]) => (
-                <div key={status} className="flex justify-between items-center">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-                    {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </span>
-                  <span className="text-sm font-medium text-gray-900">{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Opportunity Pipeline */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Opportunity Pipeline
-            </h3>
-            <div className="space-y-3">
-              {Object.entries(opportunitiesByStage).map(([stage, count]) => (
-                <div key={stage} className="flex justify-between items-center">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(stage)}`}>
-                    {stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </span>
-                  <span className="text-sm font-medium text-gray-900">{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Data Tables Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Leads */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Recent Leads
-              </h3>
-              <button
-                onClick={onRefresh}
-                className="text-sm text-blue-600 hover:text-blue-500"
-              >
-                View all
-              </button>
-            </div>
-            <div className="space-y-3">
-              {recentLeads.length > 0 ? (
-                recentLeads.map((lead) => (
-                  <div key={lead.id} className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{lead.name}</p>
-                      <p className="text-sm text-gray-500">{lead.company || lead.email}</p>
-                    </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
-                      {lead.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No recent leads</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* High-Value Opportunities */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                High-Value Opportunities
-              </h3>
-              <button
-                onClick={onRefresh}
-                className="text-sm text-blue-600 hover:text-blue-500"
-              >
-                View all
-              </button>
-            </div>
-            <div className="space-y-3">
-              {highValueOpportunities.length > 0 ? (
-                highValueOpportunities.map((opportunity) => (
-                  <div key={opportunity.id} className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{opportunity.title}</p>
-                      <p className="text-sm text-gray-500">${opportunity.value.toLocaleString()}</p>
-                    </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(opportunity.stage)}`}>
-                      {opportunity.stage.replace('_', ' ')}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No high-value opportunities</p>
-              )}
-            </div>
-          </div>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+            <TrendingUp className="mr-3 h-6 w-6 text-blue-600" />
+            Sales Dashboard
+          </h2>
+          <p className="text-gray-600 mt-1">Overview of your sales operations</p>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white overflow-hidden shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-            Quick Actions
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button className="flex items-center p-3 border border-gray-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors">
-              <Users className="h-5 w-5 text-blue-500 mr-2" />
-              <span className="text-sm font-medium text-gray-900">Add Lead</span>
-            </button>
-            <button className="flex items-center p-3 border border-gray-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors">
-              <Target className="h-5 w-5 text-green-500 mr-2" />
-              <span className="text-sm font-medium text-gray-900">Create Opportunity</span>
-            </button>
-            <button className="flex items-center p-3 border border-gray-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors">
-              <BarChart3 className="h-5 w-5 text-purple-500 mr-2" />
-              <span className="text-sm font-medium text-gray-900">View Reports</span>
-            </button>
-            <button className="flex items-center p-3 border border-gray-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors">
-              <TrendingUp className="h-5 w-5 text-orange-500 mr-2" />
-              <span className="text-sm font-medium text-gray-900">Sales Forecast</span>
-            </button>
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {quickActions.map((action, index) => {
+            const IconComponent = action.icon;
+            return (
+              <button
+                key={index}
+                onClick={action.action}
+                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200 text-left group"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`${action.color} p-2 rounded-md group-hover:scale-110 transition-transform duration-200`}>
+                    <IconComponent className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{action.name}</p>
+                    <p className="text-sm text-gray-500">{action.description}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Module Statistics */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Module Overview</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {moduleStats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <div
+                key={index}
+                onClick={stat.action}
+                className="cursor-pointer p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200 group"
+              >
+                <div className="flex items-center">
+                  <div className={`${stat.bgColor} p-3 rounded-md group-hover:scale-110 transition-transform duration-200`}>
+                    <IconComponent className={`h-6 w-6 ${stat.color}`} />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Activities and Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activities */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activities</h3>
+          <div className="space-y-4">
+            {recentActivities.map((activity, index) => {
+              const IconComponent = getActivityIcon(activity.type);
+              return (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-full bg-gray-100`}>
+                    <IconComponent className={`h-4 w-4 ${getActivityColor(activity.type)}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                    <p className="text-sm text-gray-500">{activity.customer}</p>
+                  </div>
+                  <div className="text-sm text-gray-400">{activity.time}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Alerts and Notifications */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Alerts & Notifications</h3>
+          <div className="space-y-4">
+            {stats.overdueInvoices > 0 && (
+              <div className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">
+                    {stats.overdueInvoices} overdue invoice(s)
+                  </p>
+                  <p className="text-sm text-red-600">Requires immediate attention</p>
+                </div>
+              </div>
+            )}
+            
+            {stats.pendingDispatches > 0 && (
+              <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                <Truck className="h-5 w-5 text-yellow-500" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">
+                    {stats.pendingDispatches} pending dispatch(es)
+                  </p>
+                  <p className="text-sm text-yellow-600">Ready for shipment</p>
+                </div>
+              </div>
+            )}
+            
+            {stats.activeReturns > 0 && (
+              <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                <RotateCcw className="h-5 w-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium text-blue-800">
+                    {stats.activeReturns} active return(s)
+                  </p>
+                  <p className="text-sm text-blue-600">Needs processing</p>
+                </div>
+              </div>
+            )}
+            
+            {stats.overdueInvoices === 0 && stats.pendingDispatches === 0 && stats.activeReturns === 0 && (
+              <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium text-green-800">All systems running smoothly</p>
+                  <p className="text-sm text-green-600">No urgent actions required</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Performance Charts */}
+      {showPerformance ? (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Sales Performance Analytics</h3>
+              <button
+                onClick={() => setShowPerformance(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="p-6">
+            <SalesPerformance />
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Sales Performance</h3>
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-900 font-medium mb-2">Interactive Performance Analytics</p>
+              <p className="text-gray-500 mb-4">Revenue trends, conversion rates, pipeline analysis, and more</p>
+              <button
+                onClick={() => setShowPerformance(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors"
+              >
+                View Performance Charts
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

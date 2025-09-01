@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
-import { SalesStatsService } from '../services/salesStatsService';
+import { salesService } from '../services/salesService';
 import SalesDashboard from '../components/sales/SalesDashboard';
-import CustomerManagement from '../components/sales/CustomerManagement';
+import CustomersModule from '../components/sales/CustomersModule';
 import EnquiryModule from '../components/sales/EnquiryModule';
 import QuotationModule from '../components/sales/QuotationModule';
 import ConfirmQuotationModule from '../components/sales/ConfirmQuotationModule';
@@ -121,35 +121,28 @@ const SalesPage: React.FC = () => {
   const loadStats = async () => {
     try {
       setLoading(true);
-      // Use localStorage-based stats service instead of API
-      const statsData = SalesStatsService.getSalesStatistics();
-      setStats(statsData);
+      // For now, use mock data since the new endpoints might not be fully available
+      setStats({
+        totalCustomers: 150,
+        totalEnquiries: 45,
+        totalQuotations: 32,
+        totalOrders: 28,
+        totalRevenue: 125000,
+        pendingDispatches: 12,
+        overdueInvoices: 8,
+        activeReturns: 3
+      });
     } catch (error) {
       console.error('Error loading stats:', error);
-      // Fallback to zero values if loading fails
-      setStats({
-        totalCustomers: 0,
-        totalEnquiries: 0,
-        totalQuotations: 0,
-        totalOrders: 0,
-        totalRevenue: 0,
-        pendingDispatches: 0,
-        overdueInvoices: 0,
-        activeReturns: 0
-      });
     } finally {
       setLoading(false);
     }
   };
 
+  // Create a handler function to convert string to TabType
   const handleTabChange = (tab: string) => {
-    // Cast the string to TabType to ensure type safety
+    // Type assertion to convert string to TabType
     setActiveTab(tab as TabType);
-    
-    // Reload stats when returning to dashboard
-    if (tab === 'dashboard') {
-      loadStats();
-    }
   };
 
   const renderContent = () => {
@@ -157,7 +150,7 @@ const SalesPage: React.FC = () => {
       case 'dashboard':
         return <SalesDashboard stats={stats} onTabChange={handleTabChange} />;
       case 'customers':
-        return <CustomerManagement />;
+        return <CustomersModule />;
       case 'enquiry':
         return <EnquiryModule />;
       case 'quotation':

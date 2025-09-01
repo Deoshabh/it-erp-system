@@ -253,29 +253,6 @@ export interface SalesReturn {
 }
 
 // DTOs for creating/updating records
-export interface CreateLeadDto {
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  source: 'website' | 'referral' | 'social_media' | 'email' | 'phone' | 'event' | 'advertisement' | 'other';
-  estimatedValue?: number;
-  notes?: string;
-  assignedTo?: string;
-}
-
-export interface CreateOpportunityDto {
-  title: string;
-  description?: string;
-  value: number;
-  stage?: 'prospecting' | 'qualification' | 'needs_analysis' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
-  probability: number;
-  expectedCloseDate?: string;
-  customerId: string;
-  assignedTo?: string;
-}
-
 export interface CreateCustomerDto {
   name: string;
   email: string;
@@ -402,8 +379,6 @@ export interface CreateSalesReturnDto {
 }
 
 // Update DTOs
-export type UpdateLeadDto = Partial<CreateLeadDto>;
-export type UpdateOpportunityDto = Partial<CreateOpportunityDto>;
 export type UpdateCustomerDto = Partial<CreateCustomerDto>;
 export type UpdateEnquiryDto = Partial<CreateEnquiryDto>;
 export type UpdateQuotationDto = Partial<CreateQuotationDto>;
@@ -414,7 +389,7 @@ export type UpdateSalesReturnDto = Partial<CreateSalesReturnDto>;
 
 // Sales Service Class
 class SalesService {
-  private baseUrl = '/sales';
+  private baseUrl = '/api/sales';
 
   // Customer Management
   async getCustomers(params?: PaginationParams): Promise<PaginatedResponse<Customer>> {
@@ -557,7 +532,7 @@ class SalesService {
   }
 
   async getSalesOrderStatistics(): Promise<any> {
-    const response = await apiClient.get(`${this.baseUrl}/statistics`);
+    const response = await apiClient.get(`${this.baseUrl}/sales-orders/statistics`);
     return response.data;
   }
 
@@ -627,7 +602,7 @@ class SalesService {
   }
 
   async getInvoicesStats(): Promise<any> {
-    const response = await apiClient.get(`${this.baseUrl}/statistics`);
+    const response = await apiClient.get(`${this.baseUrl}/invoices/statistics`);
     return response.data;
   }
 
@@ -662,67 +637,7 @@ class SalesService {
   }
 
   async getReturnsStats(): Promise<any> {
-    const response = await apiClient.get(`${this.baseUrl}/statistics`);
-    return response.data;
-  }
-
-  // Lead Management (for backward compatibility)
-  async getLeadsPaginated(params?: PaginationParams): Promise<PaginatedResponse<Lead>> {
-    const response = await apiClient.get(`${this.baseUrl}/leads`, { params });
-    return response.data;
-  }
-
-  async getLead(id: string): Promise<Lead> {
-    const response = await apiClient.get(`${this.baseUrl}/leads/${id}`);
-    return response.data;
-  }
-
-  async createLead(data: CreateLeadDto): Promise<Lead> {
-    const response = await apiClient.post(`${this.baseUrl}/leads`, data);
-    return response.data;
-  }
-
-  async updateLead(id: string, data: UpdateLeadDto): Promise<Lead> {
-    const response = await apiClient.patch(`${this.baseUrl}/leads/${id}`, data);
-    return response.data;
-  }
-
-  async deleteLead(id: string): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/leads/${id}`);
-  }
-
-  async getLeadStatistics(): Promise<any> {
-    const response = await apiClient.get(`${this.baseUrl}/leads/statistics`);
-    return response.data;
-  }
-
-  // Opportunity Management (for backward compatibility)
-  async getOpportunitiesPaginated(params?: PaginationParams): Promise<PaginatedResponse<Opportunity>> {
-    const response = await apiClient.get(`${this.baseUrl}/opportunities`, { params });
-    return response.data;
-  }
-
-  async getOpportunity(id: string): Promise<Opportunity> {
-    const response = await apiClient.get(`${this.baseUrl}/opportunities/${id}`);
-    return response.data;
-  }
-
-  async createOpportunity(data: CreateOpportunityDto): Promise<Opportunity> {
-    const response = await apiClient.post(`${this.baseUrl}/opportunities`, data);
-    return response.data;
-  }
-
-  async updateOpportunity(id: string, data: UpdateOpportunityDto): Promise<Opportunity> {
-    const response = await apiClient.patch(`${this.baseUrl}/opportunities/${id}`, data);
-    return response.data;
-  }
-
-  async deleteOpportunity(id: string): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/opportunities/${id}`);
-  }
-
-  async getOpportunityStatistics(): Promise<any> {
-    const response = await apiClient.get(`${this.baseUrl}/opportunities/statistics`);
+    const response = await apiClient.get(`${this.baseUrl}/returns/statistics`);
     return response.data;
   }
 

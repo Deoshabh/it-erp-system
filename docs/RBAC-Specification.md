@@ -2,7 +2,7 @@
 
 ## User Roles and Permissions
 
-### 🔴 ADMIN (Super User)
+###  ADMIN (Super User)
 **Full system access - Can do everything**
 
 #### Access Rights:
@@ -17,7 +17,7 @@
 
 ---
 
-### 🟠 HR (Human Resources)
+###  HR (Human Resources)
 **People-focused access with financial oversight**
 
 #### Access Rights:
@@ -37,7 +37,7 @@
 
 ---
 
-### 🟡 MANAGER (Department/Team Manager)
+###  MANAGER (Department/Team Manager)
 **Team management with limited administrative access**
 
 #### Access Rights:
@@ -58,7 +58,7 @@
 
 ---
 
-### 🟢 FINANCE (Finance Team)
+###  FINANCE (Finance Team)
 **Financial focus with cross-department visibility**
 
 #### Access Rights:
@@ -78,7 +78,7 @@
 
 ---
 
-### 🔵 SALES (Sales Team)
+###  SALES (Sales Team)
 **Sales-focused access with customer management**
 
 #### Access Rights:
@@ -99,7 +99,7 @@
 
 ---
 
-### 🟢 EMPLOYEE (General Employee)
+###  EMPLOYEE (General Employee)
 **Basic access for daily operations**
 
 #### Access Rights:
@@ -126,29 +126,29 @@
 | Module | Endpoint | Admin | HR | Manager | Finance | Sales | Employee |
 |--------|----------|-------|----|---------|---------| ------|----------|
 | **Auth** |
-| POST /auth/login | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| POST /auth/register | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| GET /auth/profile | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| POST /auth/login | Yes | Yes | Yes | Yes | Yes | Yes |
+| POST /auth/register | Yes | Yes | No | No | No | No |
+| GET /auth/profile | Yes | Yes | Yes | Yes | Yes | Yes |
 | **Users** |
-| GET /users | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ (limited) |
-| POST /users | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| PUT /users/:id | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ (own only) |
-| DELETE /users/:id | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| GET /users | Yes | Yes | Yes | No | No | Yes (limited) |
+| POST /users | Yes | Yes | No | No | No | No |
+| PUT /users/:id | Yes | Yes | No | No | No | No (own only) |
+| DELETE /users/:id | Yes | No | No | No | No | No |
 | **Employees** |
-| GET /employees | ✅ | ✅ | ✅ | ✅ (limited) | ✅ (limited) | ✅ (very limited) |
-| POST /employees | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| PUT /employees/:id | ✅ | ✅ | ✅ (team only) | ❌ | ❌ | ❌ (own basic info) |
-| DELETE /employees/:id | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| GET /employees | Yes | Yes | Yes | Yes (limited) | Yes (limited) | Yes (very limited) |
+| POST /employees | Yes | Yes | No | No | No | No |
+| PUT /employees/:id | Yes | Yes | Yes (team only) | No | No | No (own basic info) |
+| DELETE /employees/:id | Yes | Yes | No | No | No | No |
 | **Finance** |
-| GET /finance | ✅ | ✅ (HR related) | ✅ (dept budget) | ✅ | ✅ (sales related) | ✅ (own records) |
-| POST /finance | ✅ | ✅ (HR expenses) | ✅ (dept expenses) | ✅ | ✅ (sales expenses) | ✅ (expense claims) |
-| PUT /finance/:id | ✅ | ✅ (HR related) | ✅ (up to limit) | ✅ | ✅ (sales related) | ❌ |
-| DELETE /finance/:id | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| GET /finance | Yes | Yes (HR related) | Yes (dept budget) | Yes | Yes (sales related) | Yes (own records) |
+| POST /finance | Yes | Yes (HR expenses) | Yes (dept expenses) | Yes | Yes (sales expenses) | Yes (expense claims) |
+| PUT /finance/:id | Yes | Yes (HR related) | Yes (up to limit) | Yes | Yes (sales related) | No |
+| DELETE /finance/:id | Yes | No | No | Yes | No | No |
 | **Procurement** |
-| GET /procurement | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (own requests) |
-| POST /procurement | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (limited amount) |
-| PUT /procurement/:id | ✅ | ✅ (HR related) | ✅ (up to ₹25k) | ✅ | ✅ (up to ₹10k) | ❌ |
-| DELETE /procurement/:id | ✅ | ✅ (own/HR related) | ✅ (own/dept) | ✅ | ✅ (own) | ✅ (own only) |
+| GET /procurement | Yes | Yes | Yes | Yes | Yes | Yes (own requests) |
+| POST /procurement | Yes | Yes | Yes | Yes | Yes | Yes (limited amount) |
+| PUT /procurement/:id | Yes | Yes (HR related) | Yes (up to ₹25k) | Yes | Yes (up to ₹10k) | No |
+| DELETE /procurement/:id | Yes | Yes (own/HR related) | Yes (own/dept) | Yes | Yes (own) | Yes (own only) |
 
 ## Approval Limits
 

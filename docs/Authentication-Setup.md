@@ -1,6 +1,6 @@
-# 🔐 Authentication & Authorization System - Complete Setup
+# Authentication & Authorization System - Complete Setup
 
-## 🎯 Overview
+## Overview
 
 The IT ERP System now has a comprehensive role-based access control (RBAC) system with:
 
@@ -9,7 +9,7 @@ The IT ERP System now has a comprehensive role-based access control (RBAC) syste
 - **Frontend Protection**: Route-level and component-level access control
 - **Secure API**: All endpoints protected with guards and role decorators
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Setup Database and Dependencies
 
@@ -44,7 +44,7 @@ npm run dev
 npm run seed
 ```
 
-## 👥 User Roles & Test Accounts
+## User Roles & Test Accounts
 
 | Role | Email | Password | Permissions |
 |------|-------|----------|-------------|
@@ -55,7 +55,7 @@ npm run seed
 | **Sales** | sales@company.com | sales123 | Sales data, customer management |
 | **Employee** | employee@company.com | emp123 | Basic profile access, file uploads |
 
-## 🔒 Authentication Flow
+## Authentication Flow
 
 ### Login Process
 1. User submits email/password via `LoginForm`
@@ -71,47 +71,47 @@ npm run seed
 - **API Level**: Guards check JWT validity and role permissions
 - **Component Level**: `useAuth().canAccess()` for conditional rendering
 
-## 📋 Permission Matrix
+## Permission Matrix
 
 ### Admin
-- ✅ All user management (create, read, update, delete)
-- ✅ All employee data including salaries
-- ✅ All financial operations
-- ✅ System configuration
-- ✅ All approval limits
+- All user management (create, read, update, delete)
+- All employee data including salaries
+- All financial operations
+- System configuration
+- All approval limits
 
 ### HR
-- ✅ Employee management (create, read, update)
-- ✅ Salary and compensation data
-- ✅ Performance management
-- ✅ Approve up to $5,000
+- Employee management (create, read, update)
+- Salary and compensation data
+- Performance management
+- Approve up to $5,000
 
 ### Manager  
-- ✅ View team members
-- ✅ Basic employee data (no salaries)
-- ✅ Project management
-- ✅ Approve up to $10,000
+- View team members
+- Basic employee data (no salaries)
+- Project management
+- Approve up to $10,000
 
 ### Finance
-- ✅ Financial data and reports
-- ✅ Invoice management
-- ✅ Expense tracking
-- ✅ Budget management
-- ✅ Approve up to $25,000
+- Financial data and reports
+- Invoice management
+- Expense tracking
+- Budget management
+- Approve up to $25,000
 
 ### Sales
-- ✅ Sales data and reports
-- ✅ Customer management
-- ✅ Lead tracking
-- ✅ Approve up to $15,000
+- Sales data and reports
+- Customer management
+- Lead tracking
+- Approve up to $15,000
 
 ### Employee
-- ✅ Own profile management
-- ✅ File uploads
-- ✅ Basic dashboard access
-- ❌ No management capabilities
+- Own profile management
+- File uploads
+- Basic dashboard access
+- No management capabilities
 
-## 🛡️ Security Features
+## Security Features
 
 ### Backend Security
 - **JWT Authentication**: Secure token-based auth
@@ -126,7 +126,7 @@ npm run seed
 - **Token Management**: Automatic token refresh and logout
 - **API Interceptors**: Auto-attach auth headers
 
-## 🔧 Technical Implementation
+## Technical Implementation
 
 ### Backend Architecture
 ```
@@ -152,10 +152,10 @@ src/
 │       ├── LoginForm.tsx         # Login interface
 │       └── ProtectedRoute.tsx    # Route protection
 └── pages/
-    └── _app.tsx                  # AuthProvider wrapper
+  └── _app.tsx                  # AuthProvider wrapper
 ```
 
-## 🔄 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /auth/login` - User login
@@ -174,7 +174,7 @@ src/
 - `PUT /employees/:id` - Update employee (Manager+)
 - `DELETE /employees/:id` - Delete employee (Admin/HR only)
 
-## 🧪 Testing the System
+## Testing the System
 
 ### 1. Authentication Test
 ```bash
@@ -194,7 +194,7 @@ curl -X GET http://localhost:3001/users \
 ### 3. Role Authorization Test
 Try accessing admin endpoints with different user roles to verify restrictions.
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -215,7 +215,7 @@ npm run seed
 curl http://localhost:3001/health
 ```
 
-## 📚 Next Steps
+## Next Steps
 
 1. **Database Setup**: Configure PostgreSQL/MySQL connection
 2. **Environment Variables**: Set up production environment configs
@@ -224,7 +224,7 @@ curl http://localhost:3001/health
 5. **Audit Logging**: Track user actions for compliance
 6. **Password Reset**: Implement forgot password functionality
 
-## 🔗 Related Documentation
+## Related Documentation
 
 - [RBAC Specification](./RBAC-Specification.md) - Detailed role permissions
 - [API Documentation](./API.md) - Complete endpoint reference
@@ -232,6 +232,4 @@ curl http://localhost:3001/health
 
 ---
 
-🎉 **Your IT ERP System is now secure with comprehensive authentication and role-based access control!**
-
-Ready to test? Start with `admin@company.com / admin123` for full access.
+**Your IT ERP System is now secure with comprehensive authentication and role-based access control!**

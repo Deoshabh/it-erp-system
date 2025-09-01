@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Opportunity, Customer, salesService, CreateOpportunityDto } from '../../services/salesService';
-import { Plus, Search, Edit, Trash2, Target, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Target, Calendar, IndianRupee } from 'lucide-react';
 
 interface OpportunityManagementProps {
   opportunities: Opportunity[];
@@ -195,9 +195,9 @@ const OpportunityManagement: React.FC<OpportunityManagementProps> = ({
                 <div className="mt-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <DollarSign className="h-4 w-4 text-green-500 mr-1" />
+                      <IndianRupee className="h-4 w-4 text-green-500 mr-1" />
                       <span className="text-sm font-medium text-gray-900">
-                        ${opportunity.value.toLocaleString()}
+                        ₹{(opportunity.value || 0).toLocaleString('en-IN')}
                       </span>
                     </div>
                     <span className={`text-sm font-medium ${getProbabilityColor(opportunity.probability)}`}>
