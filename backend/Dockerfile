@@ -1,5 +1,6 @@
 # Backend-only Dockerfile (NestJS + Puppeteer), Debian-based for Chromium libs
 # Exposes and runs on port 3003
+# Updated: Force fresh deployment
 
 # Base with Chromium libs
 FROM node:20-bookworm-slim AS base
