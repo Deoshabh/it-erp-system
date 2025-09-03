@@ -58,5 +58,5 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 EXPOSE 3003
 
 # adjust start command if needed
-CMD ["npm", "start"]
+CMD ["node", "dist/main.js"]
 # --- end Dockerfile ---
