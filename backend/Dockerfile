@@ -40,7 +40,7 @@ FROM base AS builder
 WORKDIR /app/backend
 COPY --from=deps /app/backend/node_modules ./node_modules
 COPY . ./
-RUN npm run build
+RUN npx nest build
 RUN npm prune --omit=dev
 
 # Runtime image
