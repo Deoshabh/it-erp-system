@@ -1,4 +1,4 @@
-# Use official Node.js 18 image
+# Use official Node.js 18 image - optimized for ERP backend
 FROM node:18-alpine AS builder
 
 WORKDIR /app/backend
