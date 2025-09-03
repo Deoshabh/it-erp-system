@@ -51,11 +51,11 @@ COPY --from=builder /app/backend/package.json ./package.json
 
 # set environment
 ENV NODE_ENV=production
-ENV PORT=3003
+ENV PORT=4101
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-EXPOSE 3003
+EXPOSE 4101
 
 # adjust start command if needed
 CMD ["node", "dist/main.js"]
