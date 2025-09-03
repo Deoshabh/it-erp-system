@@ -1,69 +1,31 @@
-# Backend-only Dockerfile (NestJS + Puppeteer), Debian-based for Chromium libs
-# Exposes and runs on port 3003
-# Updated: Force fresh deployment
-
-# Base with Chromium libs
-FROM node:20-bookworm-slim AS base
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    ca-certificates \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libgbm1 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libxss1 \
-    libgtk-3-0 \
-    libxshmfence1 \
-    libglu1 \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV NODE_ENV=production
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PORT=3003
+# --- Dockerfile (multi-stage) ---
+# Stage: builder
+FROM node:18-bullseye AS builder
 
 WORKDIR /app/backend
 
-# Install deps (with dev) for build
-FROM base AS deps
-WORKDIR /app/backend
-COPY package*.json ./
-# Prefer lockfile if present; fallback to install
-RUN --mount=type=cache,target=/root/.npm \
-    ( [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] ) && npm ci || npm install
+# prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Build and prune to production
-FROM base AS builder
-WORKDIR /app/backend
+# copy manifests first (better caching)
+COPY package.json package-lock.json* ./
 
-# copy manifests first for better caching
-COPY package*.json ./
+# install all deps (including devDeps for @nestjs/cli)
+RUN npm install
 
-# install deps (ci if you have a lockfile, else install)
-# choose one of these RUN lines:
-
-# If you DO have package-lock.json:
-# RUN --mount=type=cache,id=npm,target=/root/.npm npm ci
-
-# If you DON'T have package-lock.json:
-RUN --mount=type=cache,id=npm,target=/root/.npm npm install
-
-# now copy the rest
+# copy source
 COPY . ./
 
-# build via npm script so it can find the local CLI
+# build using local @nestjs/cli (via npm script)
 RUN npm run build
 
-# optional: remove dev deps for runtime image (only in multi-stage)
+# remove dev deps to shrink runtime bundle
 RUN npm prune --omit=dev
 
-# Runtime image
-FROM node:20-bookworm-slim AS runner
+# Stage: runtime
+FROM node:18-bullseye-slim AS runtime
 
+# Install Chromium and dependencies for Puppeteer
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     ca-certificates \
@@ -80,15 +42,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglu1 \
     && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_ENV=production
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PORT=3003
-
 WORKDIR /app/backend
+
+# copy only needed files from builder
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/node_modules ./node_modules
-COPY package*.json ./
+COPY --from=builder /app/backend/package.json ./package.json
+
+# set environment
+ENV NODE_ENV=production
+ENV PORT=3003
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 EXPOSE 3003
-CMD ["node", "dist/main.js"]
+
+# adjust start command if needed
+CMD ["npm", "start"]
+# --- end Dockerfile ---
