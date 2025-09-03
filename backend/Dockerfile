@@ -1,62 +1,50 @@
-# --- Dockerfile (multi-stage) ---
-# Stage: builder
-FROM node:18-bullseye AS builder
+# Use official Node.js 18 image
+FROM node:18-alpine AS builder
 
 WORKDIR /app/backend
 
-# prevent interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++ bash
 
-# copy manifests first (better caching)
+# Copy package files
 COPY package.json package-lock.json* ./
 
-# install all deps (including devDeps for @nestjs/cli)
-RUN npm install
+# Install dependencies
+RUN npm ci
 
-# copy source
-COPY . ./
+# Copy source code
+COPY . .
 
-# build using local @nestjs/cli (via npm script)
+# Build the application
 RUN npm run build
 
-# remove dev deps to shrink runtime bundle
-RUN npm prune --omit=dev
+# Production stage
+FROM node:18-alpine AS runtime
 
-# Stage: runtime
-FROM node:18-bullseye-slim AS runtime
-
-# Install Chromium and dependencies for Puppeteer
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install Chromium for Puppeteer
+RUN apk add --no-cache \
     chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
     ca-certificates \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libgbm1 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libxss1 \
-    libgtk-3-0 \
-    libxshmfence1 \
-    libglu1 \
-    && rm -rf /var/lib/apt/lists/*
+    ttf-freefont
 
 WORKDIR /app/backend
 
-# copy only needed files from builder
+# Copy built application and production dependencies
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/package.json ./package.json
 
-# set environment
+# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=4101
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 EXPOSE 4101
 
-# adjust start command if needed
+# Run the application
 CMD ["node", "dist/main.js"]
-# --- end Dockerfile ---
