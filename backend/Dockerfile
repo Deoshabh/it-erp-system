@@ -7,10 +7,10 @@ WORKDIR /app/backend
 RUN apk add --no-cache python3 make g++ bash
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
