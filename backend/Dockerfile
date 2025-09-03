@@ -38,9 +38,10 @@ RUN --mount=type=cache,target=/root/.npm \
 # Build and prune to production
 FROM base AS builder
 WORKDIR /app/backend
-COPY --from=deps /app/backend/node_modules ./node_modules
+COPY package*.json ./
+RUN npm install
 COPY . ./
-RUN ./node_modules/.bin/nest build
+RUN npm run build
 RUN npm prune --omit=dev
 
 # Runtime image
