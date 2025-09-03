@@ -30,7 +30,7 @@ WORKDIR /app/backend
 # Install deps (with dev) for build
 FROM base AS deps
 WORKDIR /app/backend
-COPY backend/package*.json ./
+COPY package*.json ./
 # Prefer lockfile if present; fallback to install
 RUN --mount=type=cache,target=/root/.npm \
     ( [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] ) && npm ci || npm install
@@ -39,7 +39,7 @@ RUN --mount=type=cache,target=/root/.npm \
 FROM base AS builder
 WORKDIR /app/backend
 COPY --from=deps /app/backend/node_modules ./node_modules
-COPY backend ./
+COPY . ./
 RUN npm run build && npm prune --omit=dev
 
 # Runtime image
@@ -69,7 +69,7 @@ ENV PORT=3003
 WORKDIR /app/backend
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/node_modules ./node_modules
-COPY backend/package*.json ./
+COPY package*.json ./
 
 EXPOSE 3003
 CMD ["node", "dist/main.js"]
