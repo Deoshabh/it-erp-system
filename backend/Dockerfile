@@ -1,50 +1,63 @@
-# Use official Node.js 18 image - optimized for ERP backend
-FROM node:18-alpine AS builder
+# --- Dockerfile (multi-stage) ---
+# Stage: builder
+FROM node:18-bullseye AS builder
 
 WORKDIR /app/backend
 
-# Install build dependencies for native modules
-RUN apk add --no-cache python3 make g++ bash
+# prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Copy package files
-COPY package.json package-lock.json ./
+# copy manifests first (better caching)
+COPY package.json ./
+COPY package-lock.json* ./
 
-# Install dependencies
+# install all deps (including devDeps for @nestjs/cli)
 RUN npm install
 
-# Copy source code
-COPY . .
+# copy source
+COPY . ./
 
-# Build the application
+# build using local @nestjs/cli (via npm script)
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS runtime
+# remove dev deps to shrink runtime bundle
+RUN npm prune --omit=dev
 
-# Install Chromium for Puppeteer
-RUN apk add --no-cache \
+# Stage: runtime
+FROM node:18-bullseye-slim AS runtime
+
+# Install Chromium and dependencies for Puppeteer
+RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
     ca-certificates \
-    ttf-freefont
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libxss1 \
+    libgtk-3-0 \
+    libxshmfence1 \
+    libglu1 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/backend
 
-# Copy built application and production dependencies
+# copy only needed files from builder
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/package.json ./package.json
 
-# Set environment variables
+# set environment
 ENV NODE_ENV=production
 ENV PORT=4101
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 EXPOSE 4101
 
-# Run the application
+# adjust start command if needed
 CMD ["node", "dist/main.js"]
+# --- end Dockerfile ---
