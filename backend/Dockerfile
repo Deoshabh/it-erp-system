@@ -39,10 +39,26 @@ RUN --mount=type=cache,target=/root/.npm \
 # Build and prune to production
 FROM base AS builder
 WORKDIR /app/backend
+
+# copy manifests first for better caching
 COPY package*.json ./
-RUN npm install
+
+# install deps (ci if you have a lockfile, else install)
+# choose one of these RUN lines:
+
+# If you DO have package-lock.json:
+# RUN --mount=type=cache,id=npm,target=/root/.npm npm ci
+
+# If you DON'T have package-lock.json:
+RUN --mount=type=cache,id=npm,target=/root/.npm npm install
+
+# now copy the rest
 COPY . ./
-RUN ./node_modules/.bin/nest build
+
+# build via npm script so it can find the local CLI
+RUN npm run build
+
+# optional: remove dev deps for runtime image (only in multi-stage)
 RUN npm prune --omit=dev
 
 # Runtime image
