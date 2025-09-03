@@ -40,7 +40,8 @@ FROM base AS builder
 WORKDIR /app/backend
 COPY --from=deps /app/backend/node_modules ./node_modules
 COPY . ./
-RUN npm run build && npm prune --omit=dev
+RUN npm run build
+RUN npm prune --omit=dev
 
 # Runtime image
 FROM node:20-bookworm-slim AS runner
