@@ -1,9 +1,9 @@
 # Backend-only Dockerfile (NestJS + Puppeteer), Debian-based for Chromium libs
+# Exposes and runs on port 3003
 
-# Base image with build-time dependencies and Chromium libs
+# Base with Chromium libs
 FROM node:20-bookworm-slim AS base
 
-# Install Chromium and required libraries for Puppeteer
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     ca-certificates \
@@ -21,44 +21,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
-# Use system Chromium instead of downloading
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-# Ensure the app listens on 3003 by default
 ENV PORT=3003
 
 WORKDIR /app/backend
 
-# -----------------------------
-# Install dependencies (prod)
-# -----------------------------
+# Install deps (with dev) for build
 FROM base AS deps
 WORKDIR /app/backend
 COPY backend/package*.json ./
+# Prefer lockfile if present; fallback to install
 RUN --mount=type=cache,target=/root/.npm \
-    if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then \
-      npm ci --omit=dev; \
-    else \
-      npm install --omit=dev; \
-    fi
+    ( [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] ) && npm ci || npm install
 
-# -----------------------------
-# Build the app
-# -----------------------------
+# Build and prune to production
 FROM base AS builder
 WORKDIR /app/backend
-# Copy node_modules from deps
 COPY --from=deps /app/backend/node_modules ./node_modules
-# Copy source and build
 COPY backend ./
-RUN npm run build
+RUN npm run build && npm prune --omit=dev
 
-# -----------------------------
 # Runtime image
-# -----------------------------
 FROM node:20-bookworm-slim AS runner
 
-# Install runtime libs for Chromium
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     ca-certificates \
@@ -81,10 +67,9 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PORT=3003
 
 WORKDIR /app/backend
-
-# Copy production deps and build output
-COPY --from=deps /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/node_modules ./node_modules
+COPY backend/package*.json ./
 
 EXPOSE 3003
 CMD ["node", "dist/main.js"]
