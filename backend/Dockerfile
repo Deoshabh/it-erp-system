@@ -41,7 +41,7 @@ WORKDIR /app/backend
 COPY package*.json ./
 RUN npm install
 COPY . ./
-RUN npx nest build
+RUN ./node_modules/.bin/nest build
 RUN npm prune --omit=dev
 
 # Runtime image
