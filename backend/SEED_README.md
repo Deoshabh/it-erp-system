@@ -15,11 +15,25 @@ The seed script creates comprehensive test user accounts for the IT ERP System w
 ### Running the Seed Script
 
 ```bash
-# Navigate to backend directory
+# IMPORTANT: Make sure you're in the project root directory first
+# Check your current location
+pwd
+
+# Navigate to backend directory from project root
 cd backend
+
+# Verify you're in the backend directory
+ls -la
 
 # Run the seed script
 npm run seed
+```
+
+**Alternative method (if above doesn't work):**
+
+```bash
+# From project root directory
+npm run seed --prefix backend
 ```
 
 ## Test Accounts Created
@@ -96,7 +110,44 @@ The seed script creates the following test accounts:
 
 ### Common Issues
 
-1. **Database Connection Error**
+1. **Command "cd backend" fails or backend directory not found**
+
+   ```bash
+   sh: 1: cd: can't cd to backend
+   ```
+
+   **Solution**: Make sure you're in the project root directory first:
+   ```bash
+   # Check your current location
+   pwd
+   
+   # List contents to see if backend folder exists
+   ls -la
+   
+   # If you see 'backend' folder, then cd into it
+   cd backend
+   
+   # If you don't see backend folder, navigate to project root first
+   cd /path/to/it-erp-system
+   cd backend
+   ```
+
+2. **"Missing script: seednpm" error**
+
+   ```bash
+   npm error Missing script: "seednpm"
+   ```
+
+   **Solution**: This happens when there's a typo in the command. Use the correct command:
+   ```bash
+   # WRONG (notice the missing space)
+   npm runSeed
+   
+   # CORRECT (with proper space)
+   npm run seed
+   ```
+
+3. **Database Connection Error**
 
    ```
    Error: connect ECONNREFUSED 127.0.0.1:5432
@@ -106,7 +157,7 @@ The seed script creates the following test accounts:
    - Check database credentials in `.env` file
    - Verify database exists
 
-2. **User Already Exists**
+4. **User Already Exists**
 
    ```
    ⚠️ User already exists: admin@company.com
@@ -115,7 +166,7 @@ The seed script creates the following test accounts:
    - This is normal - script prevents duplicates
    - Users won't be recreated if they already exist
 
-3. **Permission Denied**
+5. **Permission Denied**
 
    ```
    Error: permission denied for table users
