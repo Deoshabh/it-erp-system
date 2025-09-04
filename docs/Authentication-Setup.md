@@ -19,7 +19,7 @@ cd backend
 npm install
 npm run build
 
-# Frontend setup  
+# Frontend setup
 cd ../frontend
 npm install
 npm run build
@@ -46,18 +46,19 @@ npm run seed
 
 ## User Roles & Test Accounts
 
-| Role | Email | Password | Permissions |
-|------|-------|----------|-------------|
-| **Admin** | admin@company.com | admin123 | Full system access, user management |
-| **HR** | hr@company.com | hr123 | Employee management, salary access |
-| **Manager** | manager@company.com | manager123 | Team oversight, approvals up to $10K |
-| **Finance** | finance@company.com | finance123 | Financial data, invoices, expenses |
-| **Sales** | sales@company.com | sales123 | Sales data, customer management |
-| **Employee** | employee@company.com | emp123 | Basic profile access, file uploads |
+| Role         | Email                | Password   | Permissions                           |
+| ------------ | -------------------- | ---------- | ------------------------------------- |
+| **Admin**    | admin@company.com    | admin123   | Full system access, user management   |
+| **HR**       | hr@company.com       | hr123      | Employee management, salary access    |
+| **Manager**  | manager@company.com  | manager123 | Team oversight, approvals up to ₹8.3L |
+| **Finance**  | finance@company.com  | finance123 | Financial data, invoices, expenses    |
+| **Sales**    | sales@company.com    | sales123   | Sales data, customer management       |
+| **Employee** | employee@company.com | emp123     | Basic profile access, file uploads    |
 
 ## Authentication Flow
 
 ### Login Process
+
 1. User submits email/password via `LoginForm`
 2. Frontend calls `/auth/login` API endpoint
 3. Backend validates credentials with bcrypt
@@ -67,6 +68,7 @@ npm run seed
 7. AuthContext provides global auth state
 
 ### Authorization Checks
+
 - **Route Level**: `ProtectedRoute` component checks authentication
 - **API Level**: Guards check JWT validity and role permissions
 - **Component Level**: `useAuth().canAccess()` for conditional rendering
@@ -74,6 +76,7 @@ npm run seed
 ## Permission Matrix
 
 ### Admin
+
 - All user management (create, read, update, delete)
 - All employee data including salaries
 - All financial operations
@@ -81,31 +84,36 @@ npm run seed
 - All approval limits
 
 ### HR
+
 - Employee management (create, read, update)
 - Salary and compensation data
 - Performance management
-- Approve up to $5,000
+- Approve up to ₹4.15L
 
-### Manager  
+### Manager
+
 - View team members
 - Basic employee data (no salaries)
 - Project management
-- Approve up to $10,000
+- Approve up to ₹8.3L
 
 ### Finance
+
 - Financial data and reports
 - Invoice management
 - Expense tracking
 - Budget management
-- Approve up to $25,000
+- Approve up to ₹20.75L
 
 ### Sales
+
 - Sales data and reports
 - Customer management
 - Lead tracking
-- Approve up to $15,000
+- Approve up to ₹12.45L
 
 ### Employee
+
 - Own profile management
 - File uploads
 - Basic dashboard access
@@ -114,6 +122,7 @@ npm run seed
 ## Security Features
 
 ### Backend Security
+
 - **JWT Authentication**: Secure token-based auth
 - **Password Hashing**: bcrypt with salt rounds
 - **Role Guards**: `@UseGuards(JwtAuthGuard, RolesGuard)`
@@ -121,6 +130,7 @@ npm run seed
 - **Data Filtering**: Role-based data access control
 
 ### Frontend Security
+
 - **Protected Routes**: Authentication required for all pages
 - **Role-based Rendering**: Components adapt to user permissions
 - **Token Management**: Automatic token refresh and logout
@@ -129,6 +139,7 @@ npm run seed
 ## Technical Implementation
 
 ### Backend Architecture
+
 ```
 src/
 ├── modules/
@@ -143,6 +154,7 @@ src/
 ```
 
 ### Frontend Architecture
+
 ```
 src/
 ├── contexts/
@@ -158,17 +170,20 @@ src/
 ## API Endpoints
 
 ### Authentication
+
 - `POST /auth/login` - User login
-- `POST /auth/register` - User registration  
+- `POST /auth/register` - User registration
 - `GET /auth/profile` - Get current user
 
 ### Users (Role-protected)
+
 - `GET /users` - List users (Admin/HR only)
 - `POST /users` - Create user (Admin/HR only)
 - `PUT /users/:id` - Update user (Admin/HR only)
 - `DELETE /users/:id` - Delete user (Admin only)
 
 ### Employees (Role-protected)
+
 - `GET /employees` - List employees (role-based filtering)
 - `POST /employees` - Create employee (Admin/HR only)
 - `PUT /employees/:id` - Update employee (Manager+)
@@ -177,6 +192,7 @@ src/
 ## Testing the System
 
 ### 1. Authentication Test
+
 ```bash
 # Test login
 curl -X POST http://localhost:3001/auth/login \
@@ -185,6 +201,7 @@ curl -X POST http://localhost:3001/auth/login \
 ```
 
 ### 2. Protected Endpoint Test
+
 ```bash
 # Test protected endpoint (use token from login)
 curl -X GET http://localhost:3001/users \
@@ -192,6 +209,7 @@ curl -X GET http://localhost:3001/users \
 ```
 
 ### 3. Role Authorization Test
+
 Try accessing admin endpoints with different user roles to verify restrictions.
 
 ## Troubleshooting
@@ -204,6 +222,7 @@ Try accessing admin endpoints with different user roles to verify restrictions.
 4. **CORS errors**: Ensure backend allows frontend origin
 
 ### Debug Commands
+
 ```bash
 # Check database connection
 npm run start:dev

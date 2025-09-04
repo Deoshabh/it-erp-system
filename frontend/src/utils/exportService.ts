@@ -1,11 +1,11 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import html2canvas from 'html2canvas';
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import html2canvas from "html2canvas";
 
 // Extend jsPDF interface for autoTable
-declare module 'jspdf' {
+declare module "jspdf" {
   interface jsPDF {
     autoTable: (options: any) => void;
   }
@@ -29,22 +29,22 @@ export class ExportService {
   // Export data to PDF table
   static exportToPDF(exportData: ExportData): void {
     const {
-      title = 'Report',
+      title = "Report",
       headers,
       data,
-      fileName = 'report.pdf',
-      companyName = 'IT Company'
+      fileName = "report.pdf",
+      companyName = "IT Company",
     } = exportData;
 
     const doc = new jsPDF();
-    
+
     // Add company header
     doc.setFontSize(20);
     doc.text(companyName, 20, 20);
-    
+
     doc.setFontSize(16);
     doc.text(title, 20, 35);
-    
+
     doc.setFontSize(12);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 50);
 
@@ -72,16 +72,16 @@ export class ExportService {
   // Export data to Excel
   static exportToExcel(exportData: ExportData): void {
     const {
-      title = 'Report',
+      title = "Report",
       headers,
       data,
-      fileName = 'report.xlsx',
-      companyName = 'IT Company'
+      fileName = "report.xlsx",
+      companyName = "IT Company",
     } = exportData;
 
     // Create workbook and worksheet
     const workbook = XLSX.utils.book_new();
-    
+
     // Add header information
     const headerData = [
       [companyName],
@@ -89,24 +89,29 @@ export class ExportService {
       [`Generated on: ${new Date().toLocaleDateString()}`],
       [], // Empty row
       headers, // Column headers
-      ...data // Actual data
+      ...data, // Actual data
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(headerData);
 
     // Style the header
-    const range = XLSX.utils.decode_range(worksheet['!ref']!);
-    
+    const range = XLSX.utils.decode_range(worksheet["!ref"]!);
+
     // Set column widths
     const columnWidths = headers.map(() => ({ wch: 15 }));
-    worksheet['!cols'] = columnWidths;
+    worksheet["!cols"] = columnWidths;
 
     // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
     // Generate Excel file and save
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
     saveAs(blob, fileName);
   }
 
@@ -114,8 +119,8 @@ export class ExportService {
   static async exportChartToPDF(options: ChartExportOptions): Promise<void> {
     const {
       elementId,
-      fileName = 'chart.pdf',
-      title = 'Chart Report'
+      fileName = "chart.pdf",
+      title = "Chart Report",
     } = options;
 
     const element = document.getElementById(elementId);
@@ -125,42 +130,42 @@ export class ExportService {
 
     try {
       const canvas = await html2canvas(element, {
-        backgroundColor: '#ffffff',
+        backgroundColor: "#ffffff",
         scale: 2, // Higher quality
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL("image/png");
       const doc = new jsPDF();
-      
+
       // Add title
       doc.setFontSize(18);
       doc.text(title, 20, 20);
-      
+
       doc.setFontSize(12);
       doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
 
       // Calculate image dimensions to fit page
       const imgWidth = 170; // Max width in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
       // Add image to PDF
-      doc.addImage(imgData, 'PNG', 20, 50, imgWidth, imgHeight);
-      
+      doc.addImage(imgData, "PNG", 20, 50, imgWidth, imgHeight);
+
       doc.save(fileName);
     } catch (error) {
-      console.error('Error exporting chart to PDF:', error);
-      throw new Error('Failed to export chart to PDF');
+      console.error("Error exporting chart to PDF:", error);
+      throw new Error("Failed to export chart to PDF");
     }
   }
 
   // Export dashboard as PDF with multiple charts
   static async exportDashboardToPDF(
     chartIds: string[],
-    fileName: string = 'dashboard.pdf',
-    title: string = 'Analytics Dashboard'
+    fileName: string = "dashboard.pdf",
+    title: string = "Analytics Dashboard"
   ): Promise<void> {
     const doc = new jsPDF();
-    
+
     // Add title page
     doc.setFontSize(20);
     doc.text(title, 20, 30);
@@ -177,19 +182,26 @@ export class ExportService {
         }
 
         const canvas = await html2canvas(element, {
-          backgroundColor: '#ffffff',
+          backgroundColor: "#ffffff",
           scale: 1.5,
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL("image/png");
         const imgWidth = 170;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
+
         // Add chart title
         doc.setFontSize(14);
         doc.text(`Chart ${i + 1}`, 20, i === 0 ? 70 : 20);
-        
-        doc.addImage(imgData, 'PNG', 20, i === 0 ? 80 : 30, imgWidth, imgHeight);
+
+        doc.addImage(
+          imgData,
+          "PNG",
+          20,
+          i === 0 ? 80 : 30,
+          imgWidth,
+          imgHeight
+        );
       } catch (error) {
         console.error(`Error processing chart ${chartIds[i]}:`, error);
       }
@@ -200,22 +212,32 @@ export class ExportService {
 
   // Generate employee report
   static generateEmployeeReport(employees: any[]): void {
-    const headers = ['Name', 'Email', 'Position', 'Department', 'Salary', 'Start Date', 'Status'];
-    const data = employees.map(emp => [
+    const headers = [
+      "Name",
+      "Email",
+      "Position",
+      "Department",
+      "Salary",
+      "Start Date",
+      "Status",
+    ];
+    const data = employees.map((emp) => [
       `${emp.firstName} ${emp.lastName}`,
       emp.email,
       emp.position,
       emp.department,
-      `$${emp.salary?.toLocaleString() || 'N/A'}`,
-      emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString() : 'N/A',
-      emp.status || 'Active'
+      `₹${emp.salary?.toLocaleString("en-IN") || "N/A"}`,
+      emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString() : "N/A",
+      emp.status || "Active",
     ]);
 
     const exportData: ExportData = {
-      title: 'Employee Report',
+      title: "Employee Report",
       headers,
       data,
-      fileName: `employees_report_${new Date().toISOString().split('T')[0]}.pdf`
+      fileName: `employees_report_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`,
     };
 
     this.exportToPDF(exportData);
@@ -224,24 +246,30 @@ export class ExportService {
   // Generate financial report
   static generateFinancialReport(invoices: any[], expenses: any[]): void {
     const doc = new jsPDF();
-    
+
     // Header
     doc.setFontSize(20);
-    doc.text('Financial Report', 20, 20);
+    doc.text("Financial Report", 20, 20);
     doc.setFontSize(12);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
 
     // Invoice summary
     doc.setFontSize(14);
-    doc.text('Invoices Summary', 20, 55);
-    
-    const invoiceHeaders = ['Invoice #', 'Client', 'Amount', 'Status', 'Due Date'];
-    const invoiceData = invoices.map(inv => [
+    doc.text("Invoices Summary", 20, 55);
+
+    const invoiceHeaders = [
+      "Invoice #",
+      "Client",
+      "Amount",
+      "Status",
+      "Due Date",
+    ];
+    const invoiceData = invoices.map((inv) => [
       inv.invoiceNumber,
       inv.clientName,
-      `$${inv.amount?.toLocaleString() || '0'}`,
+      `₹${inv.amount?.toLocaleString("en-IN") || "0"}`,
       inv.status,
-      inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : 'N/A'
+      inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "N/A",
     ]);
 
     doc.autoTable({
@@ -255,15 +283,21 @@ export class ExportService {
     // Add new page for expenses
     doc.addPage();
     doc.setFontSize(14);
-    doc.text('Expenses Summary', 20, 20);
+    doc.text("Expenses Summary", 20, 20);
 
-    const expenseHeaders = ['Description', 'Category', 'Amount', 'Date', 'Status'];
-    const expenseData = expenses.map(exp => [
+    const expenseHeaders = [
+      "Description",
+      "Category",
+      "Amount",
+      "Date",
+      "Status",
+    ];
+    const expenseData = expenses.map((exp) => [
       exp.description,
       exp.category,
-      `$${exp.amount?.toLocaleString() || '0'}`,
-      exp.date ? new Date(exp.date).toLocaleDateString() : 'N/A',
-      exp.status
+      `₹${exp.amount?.toLocaleString("en-IN") || "0"}`,
+      exp.date ? new Date(exp.date).toLocaleDateString() : "N/A",
+      exp.status,
     ]);
 
     doc.autoTable({
@@ -274,6 +308,6 @@ export class ExportService {
       headStyles: { fillColor: [239, 68, 68] },
     });
 
-    doc.save(`financial_report_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`financial_report_${new Date().toISOString().split("T")[0]}.pdf`);
   }
 }

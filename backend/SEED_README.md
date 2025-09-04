@@ -53,14 +53,14 @@ The seed script creates the following test accounts:
 - Employee management (create, read, update)
 - Salary and compensation data
 - Performance management
-- Approve up to $5,000
+- Approve up to ₹4,15,000
 
 ### Manager (manager@company.com)
 
 - View team members
 - Basic employee data (no salaries)
 - Project management
-- Approve up to $10,000
+- Approve up to ₹8,30,000
 
 ### Finance (finance@company.com)
 
@@ -68,14 +68,14 @@ The seed script creates the following test accounts:
 - Invoice management
 - Expense tracking
 - Budget management
-- Approve up to $25,000
+- Approve up to ₹20,75,000
 
 ### Sales (sales@company.com)
 
 - Sales data and reports
 - Customer management
 - Lead tracking
-- Approve up to $15,000
+- Approve up to ₹12,45,000
 
 ### Employee (employee@company.com, john.employee@company.com)
 
@@ -116,6 +116,7 @@ The seed script creates the following test accounts:
    - Users won't be recreated if they already exist
 
 3. **Permission Denied**
+
    ```
    Error: permission denied for table users
    ```
