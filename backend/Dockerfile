@@ -1,32 +1,30 @@
-# --- Dockerfile (multi-stage) ---
-# Stage: builder
+# --- Stage 1: Builder ---
 FROM node:18-bullseye AS builder
 
 WORKDIR /app/backend
 
-# prevent interactive prompts
+# Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# copy manifests first (better caching)
-COPY package.json ./
-COPY package-lock.json* ./
+# Copy package files first (better caching)
+COPY package.json package-lock.json* ./
 
-# install all deps (including devDeps for @nestjs/cli)
+# Install all dependencies including devDependencies
 RUN npm install
 
-# copy source
-COPY . ./
+# Copy the rest of the source code
+COPY . .
 
-# build using local @nestjs/cli (via npm script)
+# Build the NestJS app
 RUN npm run build
 
-# remove dev deps to shrink runtime bundle
+# Remove dev dependencies to shrink runtime image
 RUN npm prune --omit=dev
 
-# Stage: runtime
+# --- Stage 2: Runtime ---
 FROM node:18-bullseye-slim AS runtime
 
-# Install Chromium and dependencies for Puppeteer
+# Install Chromium and dependencies for Puppeteer (if needed)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     ca-certificates \
@@ -45,12 +43,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app/backend
 
-# copy only needed files from builder
+# Copy only necessary files from builder
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/package.json ./package.json
 
-# set environment
+# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=4101
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
@@ -58,6 +56,5 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 EXPOSE 4101
 
-# adjust start command if needed
+# Start the app
 CMD ["node", "dist/main.js"]
-# --- end Dockerfile ---
