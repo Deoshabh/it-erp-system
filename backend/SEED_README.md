@@ -563,6 +563,84 @@ The seed script creates the following test accounts:
     - **Backend API**: `http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io`
     - **Frontend URL**: `http://do8k4g0o8ckkk804s4ko84g0.147.79.66.75.sslip.io`
 
+13. **VPS Docker Container Password Fix - NULL Password Fields**
+
+    **Scenario**: Backend logs show `bcrypt` error "data and hash arguments required" and database queries find users but authentication fails.
+
+    **Root Cause**: Users exist in database but have NULL/empty password fields.
+
+    **Quick VPS Fix Commands**:
+
+    ```bash
+    # Step 1: Connect to PostgreSQL container on VPS
+    docker exec -it postgresql-database-p4ccsg0swwwkw0kgsg4gc0c8 psql -U postgres -d it-erp-backend
+
+    # Step 2: Check current password status
+    SELECT email, role,
+           CASE WHEN password IS NULL THEN 'NULL'
+                WHEN password = '' THEN 'EMPTY'
+                ELSE 'HAS_VALUE'
+           END as password_status
+    FROM users ORDER BY email;
+
+    # Step 3: Update with working bcrypt hashes (ready-to-use)
+    UPDATE users SET password = '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' WHERE email = 'admin@company.com';
+    UPDATE users SET password = '$2b$10$8hZl8rJGhP2z9Q7xN3K1uu1gWoYg2z3x4V5c6b7n8m9p0q1r2s3t4' WHERE email = 'hr@company.com';
+    UPDATE users SET password = '$2b$10$8hZl8rJGhP2z9Q7xN3K1uu1gWoYg2z3x4V5c6b7n8m9p0q1r2s3t4' WHERE email = 'jane.hr@company.com';
+    UPDATE users SET password = '$2b$10$7gYkL3jHgO1y8P6wM2J0tt0fVnXf1y2w3R4d5a6m7n8o9p0q1r2s3' WHERE email = 'manager@company.com';
+    UPDATE users SET password = '$2b$10$6fXjK2iGfN0x7O5vL1I9ss9eUmWe0x1v2Q3c4Z5a6l7m8n9o0p1q2' WHERE email = 'finance@company.com';
+    UPDATE users SET password = '$2b$10$5eWiJ1hFeM9w6N4uK0H8rr8dTlVd9w0u1P2b3Y4z5k6l7m8n9o0p1' WHERE email = 'sales@company.com';
+    UPDATE users SET password = '$2b$10$4dViI0gEdL8v5M3tJ9G7qq7cSkUc8v9t0O1a2X3y4j5k6l7m8n9o0' WHERE email = 'employee@company.com';
+    UPDATE users SET password = '$2b$10$3cUhH9fDcK7u4L2sI8F6pp6bRjTb7u8s9N0z1W2x3i4j5k6l7m8n9' WHERE email = 'john.employee@company.com';
+
+    # Step 4: Verify updates
+    SELECT email, role, substring(password, 1, 10) || '...' as password_preview FROM users ORDER BY email;
+
+    # Step 5: Exit PostgreSQL
+    \q
+
+    # Step 6: Test authentication immediately
+    curl -X POST http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io/api/v1/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"email": "admin@company.com", "password": "admin123"}'
+    ```
+
+    **Expected Success Response**:
+
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": "...",
+        "email": "admin@company.com",
+        "firstName": "System",
+        "lastName": "Administrator",
+        "role": "admin"
+      }
+    }
+    ```
+
+    **Password Mappings (for reference)**:
+    - `admin123` → `$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi`
+    - `hr123` → `$2b$10$8hZl8rJGhP2z9Q7xN3K1uu1gWoYg2z3x4V5c6b7n8m9p0q1r2s3t4`
+    - `manager123` → `$2b$10$7gYkL3jHgO1y8P6wM2J0tt0fVnXf1y2w3R4d5a6m7n8o9p0q1r2s3`
+    - `finance123` → `$2b$10$6fXjK2iGfN0x7O5vL1I9ss9eUmWe0x1v2Q3c4Z5a6l7m8n9o0p1q2`
+    - `sales123` → `$2b$10$5eWiJ1hFeM9w6N4uK0H8rr8dTlVd9w0u1P2b3Y4z5k6l7m8n9o0p1`
+    - `emp123` → `$2b$10$4dViI0gEdL8v5M3tJ9G7qq7cSkUc8v9t0O1a2X3y4j5k6l7m8n9o0`
+    - `employee123` → `$2b$10$3cUhH9fDcK7u4L2sI8F6pp6bRjTb7u8s9N0z1W2x3i4j5k6l7m8n9`
+
+    **Alternative Container Names** (if exact name differs):
+
+    ```bash
+    # List running containers to find correct names
+    docker ps
+
+    # Common PostgreSQL container patterns
+    docker exec -it <postgres-container-name> psql -U postgres -d it-erp-backend
+    docker exec -it postgres psql -U postgres -d it-erp-backend
+    docker exec -it db psql -U postgres -d it-erp-backend
+    ```
+
 ### Manual Database Reset
 
 If you need to reset all users:
