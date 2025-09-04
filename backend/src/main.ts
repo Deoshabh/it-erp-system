@@ -9,11 +9,15 @@ async function bootstrap() {
     "http://localhost:3003", // Local development
     "http://do8k4g0o8ckkk804s4ko84g0.147.79.66.75.sslip.io", // Production frontend
     process.env.FRONTEND_URL, // Environment variable override
+    ...(process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+      : []), // Split comma-separated CORS origins
   ].filter(Boolean);
 
   console.log("🔧 CORS Configuration:");
   console.log("   Allowed Origins:", corsOrigins);
   console.log("   Frontend URL env:", process.env.FRONTEND_URL);
+  console.log("   CORS Origin env:", process.env.CORS_ORIGIN);
 
   app.enableCors({
     origin: corsOrigins,
