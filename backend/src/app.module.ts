@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
+
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 import { EmployeesModule } from "./modules/employees/employees.module";
@@ -13,12 +14,13 @@ import { SalesModule } from "./modules/sales/sales.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { ProjectsModule } from "./modules/projects/projects.module";
 import { AdminModule } from "./modules/admin/admin.module";
+
 import { AppController } from "./app.controller";
 import { databaseConfig } from "./database/database.config";
 
 @Module({
   imports: [
-    // Configuration
+    // Config
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [".env.local", ".env"],
@@ -27,20 +29,12 @@ import { databaseConfig } from "./database/database.config";
     // Database
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const config = databaseConfig(configService);
-        // Disable SSL to fix "The server does not support SSL connections" error
-        return {
-          ...config,
-          ssl: false,
-        };
-      },
+      useFactory: (configService: ConfigService) =>
+        databaseConfig(configService),
     }),
 
-    // Authentication module (must be imported first)
+    // Feature Modules
     AuthModule,
-
-    // Feature modules
     UsersModule,
     EmployeesModule,
     FinanceModule,
