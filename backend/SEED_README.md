@@ -381,6 +381,7 @@ The seed script creates the following test accounts:
     **Use Case**: Verify backend authentication directly without frontend interference.
 
     **Basic Login Test**:
+
     ```bash
     # Test admin login with cURL
     curl -X POST http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io/api/v1/auth/login \
@@ -392,6 +393,7 @@ The seed script creates the following test accounts:
     ```
 
     **Verbose Debugging**:
+
     ```bash
     # More detailed output to see what's happening
     curl -v -X POST http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io/api/v1/auth/login \
@@ -404,6 +406,7 @@ The seed script creates the following test accounts:
     ```
 
     **Test Multiple Users**:
+
     ```bash
     # Test HR user
     curl -X POST http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io/api/v1/auth/login \
@@ -417,8 +420,9 @@ The seed script creates the following test accounts:
     ```
 
     **Expected Responses**:
-    
-    *Successful Login (200 OK)*:
+
+    _Successful Login (200 OK)_:
+
     ```json
     {
       "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -432,7 +436,8 @@ The seed script creates the following test accounts:
     }
     ```
 
-    *Failed Login (401 Unauthorized)*:
+    _Failed Login (401 Unauthorized)_:
+
     ```json
     {
       "statusCode": 401,
@@ -442,6 +447,7 @@ The seed script creates the following test accounts:
     ```
 
     **API Health Check**:
+
     ```bash
     # Check if the API is responding
     curl -v http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io/api/v1/health
@@ -456,6 +462,106 @@ The seed script creates the following test accounts:
     - Password hash mismatch (run UPDATE commands above)
     - Database connection issues
     - Authentication logic problems
+
+12. **Password Hash Mismatch - Complete Fix**
+
+    **Scenario**: cURL testing confirms 401 errors for all accounts - backend working but password hashes incompatible.
+
+    **Step 1: Generate Correct Password Hashes**
+
+    ```bash
+    # Navigate to backend directory
+    cd backend
+
+    # Generate correct bcrypt hashes for all test passwords
+    node -e "const bcrypt = require('bcrypt'); console.log('admin123:', bcrypt.hashSync('admin123', 10));"
+    node -e "const bcrypt = require('bcrypt'); console.log('hr123:', bcrypt.hashSync('hr123', 10));"
+    node -e "const bcrypt = require('bcrypt'); console.log('manager123:', bcrypt.hashSync('manager123', 10));"
+    node -e "const bcrypt = require('bcrypt'); console.log('finance123:', bcrypt.hashSync('finance123', 10));"
+    node -e "const bcrypt = require('bcrypt'); console.log('sales123:', bcrypt.hashSync('sales123', 10));"
+    node -e "const bcrypt = require('bcrypt'); console.log('emp123:', bcrypt.hashSync('emp123', 10));"
+    node -e "const bcrypt = require('bcrypt'); console.log('employee123:', bcrypt.hashSync('employee123', 10));"
+    ```
+
+    **Step 2: Update Database with Correct Hashes**
+
+    ```bash
+    # Connect to PostgreSQL database
+    # Use your database credentials from environment variables:
+    # DB_USERNAME=postgres, DB_PASSWORD=82e0i6QYF5nayX1dT5OFUDUvIo5LPVu53v0CJu3K4o1jB6xjgnenleenKqm4UL19, DB_NAME=it-erp-backend
+
+    # Method 1: Using Docker (if database is in container)
+    docker exec -it <postgres-container-name> psql -U postgres -d it-erp-backend
+
+    # Method 2: Direct connection (if database accessible)
+    psql -h <host> -U postgres -d it-erp-backend
+    ```
+
+    **Step 3: Execute Password Updates**
+
+    ```sql
+    -- Update all user passwords with correct bcrypt hashes
+    -- Replace the placeholder hashes below with the actual hashes generated in Step 1
+
+    UPDATE users SET password = '[ADMIN_HASH_FROM_STEP_1]' WHERE email = 'admin@company.com';
+    UPDATE users SET password = '[HR_HASH_FROM_STEP_1]' WHERE email = 'hr@company.com';
+    UPDATE users SET password = '[HR_HASH_FROM_STEP_1]' WHERE email = 'jane.hr@company.com';
+    UPDATE users SET password = '[MANAGER_HASH_FROM_STEP_1]' WHERE email = 'manager@company.com';
+    UPDATE users SET password = '[FINANCE_HASH_FROM_STEP_1]' WHERE email = 'finance@company.com';
+    UPDATE users SET password = '[SALES_HASH_FROM_STEP_1]' WHERE email = 'sales@company.com';
+    UPDATE users SET password = '[EMP_HASH_FROM_STEP_1]' WHERE email = 'employee@company.com';
+    UPDATE users SET password = '[EMPLOYEE_HASH_FROM_STEP_1]' WHERE email = 'john.employee@company.com';
+
+    -- Verify updates
+    SELECT email, role, substring(password, 1, 20) || '...' as password_preview FROM users ORDER BY role, email;
+
+    -- Exit PostgreSQL
+    \q
+    ```
+
+    **Step 4: Test Authentication**
+
+    ```bash
+    # Test admin login
+    curl -X POST http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io/api/v1/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"email": "admin@company.com", "password": "admin123"}'
+
+    # Should return 200 OK with access_token and user details
+
+    # Test HR login
+    curl -X POST http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io/api/v1/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"email": "hr@company.com", "password": "hr123"}'
+    ```
+
+    **Expected Success Response**:
+
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": "...",
+        "email": "admin@company.com",
+        "firstName": "System",
+        "lastName": "Administrator",
+        "role": "admin"
+      }
+    }
+    ```
+
+    **Step 5: Verify Frontend Login**
+    - Open frontend: `http://do8k4g0o8ckkk804s4ko84g0.147.79.66.75.sslip.io`
+    - Login with: `admin@company.com` / `admin123`
+    - Should successfully authenticate and redirect to dashboard
+
+    **Quick Reference - Environment Details**:
+    - **Database Host**: Your PostgreSQL container/server
+    - **Database Name**: `it-erp-backend`
+    - **Database User**: `postgres`
+    - **Database Password**: `82e0i6QYF5nayX1dT5OFUDUvIo5LPVu53v0CJu3K4o1jB6xjgnenleenKqm4UL19`
+    - **Backend API**: `http://api.swsw4w4wg4c84sowwooswoc4.147.79.66.75.sslip.io`
+    - **Frontend URL**: `http://do8k4g0o8ckkk804s4ko84g0.147.79.66.75.sslip.io`
 
 ### Manual Database Reset
 
